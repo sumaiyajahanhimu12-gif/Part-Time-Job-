@@ -1,3 +1,5 @@
-alert("App.js Loaded Successfully");
+import { db } from "./firebase.js";
 
-console.log("Firebase Connected Successfully");
+alert("Firebase Connected Successfully");
+
+console.log(db);

@@ -4,23 +4,21 @@ import {
   doc,
   getDoc,
   setDoc,
+  updateDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const tg = window.Telegram?.WebApp;
 
 if (tg) {
+
   tg.expand();
 
   const user = tg.initDataUnsafe?.user;
 
-  document.querySelector(".loading").innerHTML = `
-    <h1>💼 Part Time Job</h1>
-    <p>Welcome ${user?.first_name || "User"}</p>
-  `;
-
   if (user) {
-    saveUser(user);
+    await saveUser(user);
+    await loadUser(user);
   }
 
 } else {
@@ -35,7 +33,6 @@ if (tg) {
 async function saveUser(user) {
 
   const userRef = doc(db, "users", String(user.id));
-
   const userSnap = await getDoc(userRef);
 
   if (!userSnap.exists()) {
@@ -45,19 +42,87 @@ async function saveUser(user) {
       username: user.username || "",
       firstName: user.first_name || "",
       lastName: user.last_name || "",
+
       coin: 0,
       referrals: 0,
       activeReferrals: 0,
+
       status: "inactive",
+
+      facebookLink: "",
+      deviceId: "",
+      activatedAt: null,
+
       createdAt: serverTimestamp()
     });
 
-    console.log("New User Created");
+  }
+
+}
+
+async function loadUser(user) {
+
+  const userRef = doc(db, "users", String(user.id));
+  const userSnap = await getDoc(userRef);
+
+  const data = userSnap.data();
+
+  if (data.status === "inactive") {
+
+    document.querySelector(".loading").innerHTML = `
+      <h1>💼 Part Time Job</h1>
+
+      <p>Welcome ${user.first_name}</p>
+
+      <p>Status: ❌ Inactive</p>
+
+      <input
+        id="facebookLink"
+        placeholder="Facebook Profile Link"
+        style="padding:10px;width:90%;margin:10px;"
+      >
+
+      <button id="activateBtn">
+        🚀 Activate Account
+      </button>
+    `;
+
+    document
+      .getElementById("activateBtn")
+      .addEventListener("click", async () => {
+
+        const facebookLink =
+          document.getElementById("facebookLink").value;
+
+        if (!facebookLink) {
+          alert("Facebook Link Required");
+          return;
+        }
+
+        await updateDoc(userRef, {
+          facebookLink,
+          status: "active",
+          activatedAt: serverTimestamp()
+        });
+
+        alert("Account Activated");
+
+        location.reload();
+
+      });
 
   } else {
 
-    console.log("User Already Exists");
+    document.querySelector(".loading").innerHTML = `
+      <h1>💼 Part Time Job</h1>
+
+      <p>✅ Welcome ${user.first_name}</p>
+
+      <p>Account Active</p>
+
+      <p>Coins: ${data.coin}</p>
+    `;
 
   }
 
-        }
+}

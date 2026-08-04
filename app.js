@@ -1,3 +1,3 @@
-import { db } from "./firebase.js";
+alert("App.js Loaded Successfully");
 
 console.log("Firebase Connected Successfully");

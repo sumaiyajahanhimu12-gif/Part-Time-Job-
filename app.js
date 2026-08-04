@@ -17,6 +17,9 @@ if (tg) {
   const user = tg.initDataUnsafe?.user;
 
   if (user) {
+    console.log("Start Param:", tg.initDataUnsafe?.start_param);
+alert("Start Param: " + (tg.initDataUnsafe?.start_param || "NONE"));
+    
     await saveUser(user);
     await loadUser(user);
   }

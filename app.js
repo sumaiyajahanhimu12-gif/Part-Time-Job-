@@ -219,11 +219,59 @@ async function loadUser(user) {
 
       <p>✅ Welcome ${user.first_name}</p>
 
-      <p>Account Active</p>
+      <p>💰 Coins: ${data.coin}</p>
 
-      <p>Coins: ${data.coin}</p>
+      <div id="tasksContainer">
+        <p>Loading Tasks...</p>
+      </div>
     `;
+
+    await loadTasks();
 
   }
 
 }
+
+async function loadTasks() {
+
+  const q = query(
+    collection(db, "tasks"),
+    where("status", "==", "published")
+  );
+
+  const snap = await getDocs(q);
+
+  let html = `<h2>📢 Tasks</h2>`;
+
+  snap.forEach(task => {
+
+    const data = task.data();
+
+    html += `
+      <div style="
+        border:1px solid #444;
+        padding:10px;
+        margin:10px;
+        border-radius:10px;
+      ">
+
+        <h3>${data.name}</h3>
+
+        <p>💰 Reward: ${data.coin}</p>
+
+        <p>📂 Type: ${data.type}</p>
+
+        <button
+          onclick="window.open('${data.link}')"
+        >
+          Open Task
+        </button>
+
+      </div>
+    `;
+
+  });
+
+  document.getElementById("tasksContainer").innerHTML = html;
+
+               }

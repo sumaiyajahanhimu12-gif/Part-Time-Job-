@@ -1,1 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+>
+
+<title>Admin Dashboard</title>
+
+<link
+rel="stylesheet"
+href="../css/admin.css"
+>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+</head>
+
+<body>
+
+<div class="admin-container">
+
+<div class="admin-header">
+
+<h1>🛠 Admin Dashboard</h1>
+
+<p>Part Time Job Management</p>
+
+</div>
+
+<div class="stats-grid">
+
+<div class="stat-card">
+<h3>Total Users</h3>
+<p id="totalUsers">0</p>
+</div>
+
+<div class="stat-card">
+<h3>Active Users</h3>
+<p id="activeUsers">0</p>
+</div>
+
+<div class="stat-card">
+<h3>Tasks</h3>
+<p id="totalTasks">0</p>
+</div>
+
+<div class="stat-card">
+<h3>Withdraws</h3>
+<p id="pendingWithdraws">0</p>
+</div>
+
+</div>
+
+<div class="section-card">
+
+<h2>📋 Create Task</h2>
+
+<input
+id="taskName"
+placeholder="Task Name"
+>
+
+<input
+id="taskLink"
+placeholder="Task Link"
+>
+
+<input
+id="taskCoin"
+type="number"
+placeholder="Coin Reward"
+>
+
+<input
+id="taskCode"
+placeholder="Code (Optional)"
+>
+
+<input
+id="taskTimer"
+type="number"
+placeholder="Timer Seconds"
+>
+
+<input
+id="taskLimit"
+type="number"
+placeholder="Limit (0 = Unlimited)"
+>
+
+<select id="taskType">
+
+<option value="daily">
+Daily
+</option>
+
+<option value="weekly">
+Weekly
+</option>
+
+<option value="permanent">
+Permanent
+</option>
+
+</select>
+
+<select id="taskStatus">
+
+<option value="published">
+Published
+</option>
+
+<option value="trending">
+Trending
+</option>
+
+</select>
+
+<button id="createTaskBtn">
+
+🚀 Create Task
+
+</button>
+
+</div>
+
+<div class="admin-menu">
+
+<a href="users.html">
+👥 Users
+</a>
+
+<a href="tasks.html">
+📋 Tasks
+</a>
+
+<a href="withdraws.html">
+💰 Withdraws
+</a>
+
+<a href="referrals.html">
+👥 Referrals
+</a>
+
+<a href="settings.html">
+⚙ Settings
+</a>
+
+</div>
+
+</div>
+
+<script
+type="module"
+src="../js/admin.js"
+></script>
+
+</body>
+
+  </html>

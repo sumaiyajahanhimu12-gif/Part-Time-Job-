@@ -1,4 +1,4 @@
-import { db } from "./firebase.js";
+import { db } from "../js/firebase.js";
 
 import {
   doc,
@@ -9,25 +9,44 @@ from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 loadSettings();
 
+document
+.getElementById(
+  "saveSettingsBtn"
+)
+.addEventListener(
+  "click",
+  saveSettings
+);
+
 async function loadSettings() {
 
   const settingsRef =
-    doc(db, "settings", "system");
+    doc(
+      db,
+      "settings",
+      "system"
+    );
 
-  const snap =
-    await getDoc(settingsRef);
+  const settingsSnap =
+    await getDoc(
+      settingsRef
+    );
 
-  if (!snap.exists()) {
+  if (
+    !settingsSnap.exists()
+  ) {
     return;
   }
 
   const data =
-    snap.data();
+    settingsSnap.data();
 
   document.getElementById(
     "withdrawEnabled"
   ).value =
-    String(data.withdrawEnabled);
+    String(
+      data.withdrawEnabled ?? true
+    );
 
   document.getElementById(
     "minWithdraw"
@@ -45,15 +64,6 @@ async function loadSettings() {
     data.taskCooldown || 24;
 
 }
-
-document
-.getElementById(
-  "saveSettingsBtn"
-)
-.addEventListener(
-  "click",
-  saveSettings
-);
 
 async function saveSettings() {
 
@@ -93,7 +103,12 @@ async function saveSettings() {
       withdrawEnabled,
       minWithdraw,
       referralPercent,
-      taskCooldown
+      taskCooldown,
+      updatedAt:
+        new Date()
+    },
+    {
+      merge: true
     }
   );
 

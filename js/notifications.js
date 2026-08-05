@@ -2,9 +2,9 @@ import { db } from "./firebase.js";
 
 import {
   collection,
+  getDocs,
   query,
-  orderBy,
-  getDocs
+  orderBy
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -29,49 +29,52 @@ async function loadNotifications() {
 
   let html = "";
 
-  if (snap.empty) {
+  snap.forEach(item => {
 
-    html = `
+    const data =
+      item.data();
 
-    <div class="card">
+    let dateText = "";
 
-    <h3>
-    No Notifications
-    </h3>
+    if (data.createdAt) {
 
-    </div>
+      dateText =
+        data.createdAt
+        .toDate()
+        .toLocaleString();
 
-    `;
+    }
 
-  } else {
+    html += `
 
-    snap.forEach(item => {
+      <div class="card">
 
-      const data =
-        item.data();
+        <h3>
+          ${data.title || "Notice"}
+        </h3>
 
-      html += `
+        <p>
+          ${data.message || ""}
+        </p>
 
-      <div class="notice-card">
-
-      <h3>
-      ${data.title || "Notice"}
-      </h3>
-
-      <p>
-      ${data.message || ""}
-      </p>
+        <small>
+          ${dateText}
+        </small>
 
       </div>
 
-      `;
+    `;
 
-    });
-
-  }
+  });
 
   document.getElementById(
     "notificationsContainer"
-  ).innerHTML = html;
+  ).innerHTML =
+    html ||
+    `
+      <div class="card">
+        No Notifications Found
+      </div>
+    `;
 
 }

@@ -1,72 +1,95 @@
-<!DOCTYPE html>
-<html lang="en">
+import { db } from "../js/firebase.js";
 
-<head>
+import {
+  collection,
+  addDoc,
+  getDocs,
+  doc,
+  deleteDoc,
+  serverTimestamp,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-<meta charset="UTF-8">
+// Load existing notices on page load
+loadNotices();
 
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0"
->
+// Publish Notice Button Event
+document.getElementById("publishNoticeBtn").addEventListener("click", async () => {
+  const title = document.getElementById("noticeTitle").value.trim();
+  const message = document.getElementById("noticeMessage").value.trim();
 
-<title>Admin Notifications</title>
+  if (!title || !message) {
+    alert("Please fill in both title and message.");
+    return;
+  }
 
-<link
-rel="stylesheet"
-href="../css/admin.css"
->
+  try {
+    await addDoc(collection(db, "notifications"), {
+      title: title,
+      message: message,
+      createdAt: serverTimestamp()
+    });
 
-</head>
+    alert("Notice Published Successfully!");
+    document.getElementById("noticeTitle").value = "";
+    document.getElementById("noticeMessage").value = "";
+    
+    loadNotices();
+  } catch (error) {
+    console.error("Error publishing notice: ", error);
+    alert("Failed to publish notice.");
+  }
+});
 
-<body>
+// Function to load and display notices
+async function loadNotices() {
+  const noticeList = document.getElementById("noticeList");
+  noticeList.innerHTML = "Loading...";
 
-<div class="admin-container">
+  try {
+    const q = query(collection(db, "notifications"), orderBy("createdAt", "desc"));
+    const querySnapshot = await getDocs(q);
 
-<div class="admin-header">
+    let html = "";
 
-<h1>📢 Notifications</h1>
+    if (querySnapshot.empty) {
+      noticeList.innerHTML = "<p>No notices found.</p>";
+      return;
+    }
 
-<p>Create Notices & Announcements</p>
+    querySnapshot.forEach((documentSnapshot) => {
+      const data = documentSnapshot.data();
+      const id = documentSnapshot.id;
 
-</div>
+      html += `
+        <div class="section-card" style="margin-top: 15px;">
+          <h3>${data.title}</h3>
+          <p>${data.message}</p>
+          <button onclick="deleteNotice('${id}')" style="background: #ef4444; margin-top: 10px;">
+            🗑️ Delete Notice
+          </button>
+        </div>
+      `;
+    });
 
-<div class="section-card">
+    noticeList.innerHTML = html;
+  } catch (error) {
+    console.error("Error loading notices: ", error);
+    noticeList.innerHTML = "<p>Failed to load notices.</p>";
+  }
+}
 
-<input
-id="noticeTitle"
-placeholder="Notice Title"
->
-
-<textarea
-id="noticeMessage"
-placeholder="Notice Message"
-style="width:100%;height:120px;padding:12px;border-radius:10px;background:#1e293b;color:white;"
-></textarea>
-
-<br><br>
-
-<button id="publishNoticeBtn">
-
-📢 Publish Notice
-
-</button>
-
-</div>
-
-<div id="noticeList">
-
-Loading...
-
-</div>
-
-</div>
-
-<script
-type="module"
-src="../js/admin-notifications.js"
-></script>
-
-</body>
-
-</html>
+// Function to delete a notice
+window.deleteNotice = async function(id) {
+  if (confirm("Are you sure you want to delete this notice?")) {
+    try {
+      await deleteDoc(doc(db, "notifications", id));
+      alert("Notice Deleted");
+      loadNotices();
+    } catch (error) {
+      console.error("Error deleting notice: ", error);
+      alert("Failed to delete notice.");
+    }
+  }
+};

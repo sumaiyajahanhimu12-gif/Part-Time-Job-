@@ -4,20 +4,29 @@ import {
   collection,
   addDoc,
   getDocs,
-  serverTimestamp
+  deleteDoc,
+  doc,
+  serverTimestamp,
+  query,
+  orderBy
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-loadNotices();
-
-document
-.getElementById(
+const publishBtn =
+document.getElementById(
   "publishNoticeBtn"
-)
-.addEventListener(
-  "click",
-  publishNotice
 );
+
+if (publishBtn) {
+
+  publishBtn.addEventListener(
+    "click",
+    publishNotice
+  );
+
+}
+
+loadNotices();
 
 async function publishNotice() {
 
@@ -64,13 +73,20 @@ async function publishNotice() {
 
 async function loadNotices() {
 
-  const snap =
-    await getDocs(
+  const q =
+    query(
       collection(
         db,
         "notifications"
+      ),
+      orderBy(
+        "createdAt",
+        "desc"
       )
     );
+
+  const snap =
+    await getDocs(q);
 
   let html = "";
 
@@ -79,19 +95,43 @@ async function loadNotices() {
     const data =
       item.data();
 
+    let dateText = "";
+
+    if (data.createdAt) {
+
+      dateText =
+        data.createdAt
+        .toDate()
+        .toLocaleString();
+
+    }
+
     html += `
 
-    <div class="section-card">
+      <div class="section-card">
 
-    <h3>
-    ${data.title}
-    </h3>
+        <h3>
+          ${data.title}
+        </h3>
 
-    <p>
-    ${data.message}
-    </p>
+        <p>
+          ${data.message}
+        </p>
 
-    </div>
+        <small>
+          ${dateText}
+        </small>
+
+        <br><br>
+
+        <button
+          onclick="deleteNotice('${item.id}')"
+          style="background:#dc2626;"
+        >
+          Delete
+        </button>
+
+      </div>
 
     `;
 
@@ -100,6 +140,34 @@ async function loadNotices() {
   document.getElementById(
     "noticeList"
   ).innerHTML =
-    html;
+    html ||
+    `
+    <div class="section-card">
+      No Notices Found
+    </div>
+    `;
 
 }
+
+window.deleteNotice =
+async function(id) {
+
+  const ok =
+    confirm(
+      "Delete Notice?"
+    );
+
+  if (!ok)
+    return;
+
+  await deleteDoc(
+    doc(
+      db,
+      "notifications",
+      id
+    )
+  );
+
+  location.reload();
+
+};

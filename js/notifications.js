@@ -12,45 +12,52 @@ loadNotifications();
 
 async function loadNotifications() {
 
-  const q =
-    query(
-      collection(
-        db,
-        "notifications"
-      ),
-      orderBy(
-        "createdAt",
-        "desc"
-      )
-    );
+  try {
 
-  const snap =
-    await getDocs(q);
+    const q =
+      query(
+        collection(
+          db,
+          "notifications"
+        ),
+        orderBy(
+          "createdAt",
+          "desc"
+        )
+      );
 
-  let html = "";
+    const snap =
+      await getDocs(q);
 
-  snap.forEach(item => {
+    let html = "";
 
-    const data =
-      item.data();
+    let totalNotice = 0;
 
-    let dateText = "";
+    snap.forEach(item => {
 
-    if (data.createdAt) {
+      totalNotice++;
 
-      dateText =
-        data.createdAt
-        .toDate()
-        .toLocaleString();
+      const data =
+        item.data();
 
-    }
+      let dateText =
+        "Unknown Date";
 
-    html += `
+      if (data.createdAt) {
 
-      <div class="card">
+        dateText =
+          data.createdAt
+          .toDate()
+          .toLocaleString();
+
+      }
+
+      html += `
+
+      <div class="notice-card">
 
         <h3>
-          ${data.title || "Notice"}
+          📢 ${data.title || "Notice"}
         </h3>
 
         <p>
@@ -58,23 +65,59 @@ async function loadNotifications() {
         </p>
 
         <small>
-          ${dateText}
+          🕒 ${dateText}
         </small>
 
       </div>
 
-    `;
+      `;
 
-  });
+    });
 
-  document.getElementById(
-    "notificationsContainer"
-  ).innerHTML =
-    html ||
-    `
+    document.getElementById(
+      "notificationsContainer"
+    ).innerHTML =
+      html ||
+      `
       <div class="card">
-        No Notifications Found
+
+      <h3>
+      📭 Empty
+      </h3>
+
+      <p>
+      No Notifications Available
+      </p>
+
       </div>
-    `;
+      `;
+
+    document.title =
+      `(${totalNotice}) Notifications`;
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+    document.getElementById(
+      "notificationsContainer"
+    ).innerHTML =
+      `
+      <div class="card">
+
+      <h3>
+      ❌ Error
+      </h3>
+
+      <p>
+      Failed To Load Notifications
+      </p>
+
+      </div>
+      `;
+
+  }
 
 }

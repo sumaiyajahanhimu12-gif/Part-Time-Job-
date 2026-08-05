@@ -11,38 +11,41 @@ import {
   where,
   getDocs,
   addDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const tg = window.Telegram?.WebApp;
 
-if (tg) {
-
-  tg.expand();
-
-  const user = tg.initDataUnsafe?.user;
-
-  if (user) {
-
-    await saveUser(user);
-
-    const startParam =
-      tg.initDataUnsafe?.start_param || null;
-
-    if (startParam) {
-      await saveReferral(startParam, user.id);
-    }
-
-    await loadUser(user);
-  }
-
-} else {
+if (!tg || !tg.initDataUnsafe?.user) {
 
   document.querySelector(".loading").innerHTML = `
     <h1>💼 Part Time Job</h1>
-    <p>Open inside Telegram</p>
+    <p>Open Inside Telegram</p>
   `;
 
+  throw new Error("Telegram Required");
+
 }
+
+tg.expand();
+
+const user = tg.initDataUnsafe.user;
+
+await saveUser(user);
+
+const startParam =
+tg.initDataUnsafe?.start_param || null;
+
+if (startParam) {
+
+  await saveReferral(
+    startParam,
+    user.id
+  );
+
+}
+
+await loadDashboard(user);
 
 function generateFingerprint() {
 
@@ -50,262 +53,300 @@ function generateFingerprint() {
     navigator.userAgent +
     screen.width +
     screen.height +
-    navigator.language +
-    Intl.DateTimeFormat().resolvedOptions().timeZone
+    navigator.language
   );
 
 }
 
 async function saveUser(user) {
 
-  const userRef = doc(db, "users", String(user.id));
-  const userSnap = await getDoc(userRef);
-
-  if (!userSnap.exists()) {
-
-    const fingerprint = generateFingerprint();
-
-    const fpQuery = query(
-      collection(db, "users"),
-      where("fingerprint", "==", fingerprint)
+  const userRef =
+    doc(
+      db,
+      "users",
+      String(user.id)
     );
 
-    const fpSnap = await getDocs(fpQuery);
+  const userSnap =
+    await getDoc(userRef);
 
-    if (!fpSnap.empty) {
-
-      document.querySelector(".loading").innerHTML = `
-        <h1>🚫 Device Blocked</h1>
-        <p>Only one account allowed per device.</p>
-      `;
-
-      throw new Error("Device already used");
-    }
-
-    await setDoc(userRef, {
-      telegramId: user.id,
-      username: user.username || "",
-      firstName: user.first_name || "",
-      lastName: user.last_name || "",
-
-      coin: 0,
-
-      referrals: 0,
-      activeReferrals: 0,
-
-      totalEarned: 0,
-      totalWithdraw: 0,
-      referralEarned: 0,
-
-      status: "inactive",
-
-      facebookLink: "",
-
-      deviceId: "",
-      fingerprint,
-
-      activatedAt: null,
-
-      createdAt: serverTimestamp()
-    });
-
-  }
-
-}
-
-async function saveReferral(referrerId, referredId) {
-
-  if (String(referrerId) === String(referredId)) {
+  if (userSnap.exists())
     return;
-  }
 
-  const q = query(
-    collection(db, "pendingReferrals"),
-    where("referredId", "==", String(referredId))
-  );
+  await setDoc(userRef, {
 
-  const snap = await getDocs(q);
+    telegramId:
+      user.id,
 
-  if (!snap.empty) {
-    return;
-  }
+    username:
+      user.username || "",
 
-  await addDoc(collection(db, "pendingReferrals"), {
-    referrerId: String(referrerId),
-    referredId: String(referredId),
-    status: "pending",
-    createdAt: serverTimestamp()
+    firstName:
+      user.first_name || "",
+
+    lastName:
+      user.last_name || "",
+
+    coin: 0,
+
+    referrals: 0,
+
+    activeReferrals: 0,
+
+    totalEarned: 0,
+
+    totalWithdraw: 0,
+
+    referralIncome: 0,
+
+    facebookLink: "",
+
+    fingerprint:
+      generateFingerprint(),
+
+    status:
+      "inactive",
+
+    createdAt:
+      serverTimestamp()
+
   });
 
 }
 
-async function loadUser(user) {
+async function saveReferral(
+  referrerId,
+  referredId
+) {
 
-  const userRef = doc(db, "users", String(user.id));
-  const userSnap = await getDoc(userRef);
+  if (
+    String(referrerId)
+    ===
+    String(referredId)
+  ) return;
 
-  const data = userSnap.data();
+  const q =
+    query(
+      collection(
+        db,
+        "pendingReferrals"
+      ),
+      where(
+        "referredId",
+        "==",
+        String(referredId)
+      )
+    );
 
-  if (data.status === "inactive") {
+  const snap =
+    await getDocs(q);
 
-    document.querySelector(".loading").innerHTML = `
+  if (!snap.empty)
+    return;
+
+  await addDoc(
+    collection(
+      db,
+      "pendingReferrals"
+    ),
+    {
+      referrerId:
+        String(referrerId),
+
+      referredId:
+        String(referredId),
+
+      status:
+        "pending",
+
+      createdAt:
+        serverTimestamp()
+    }
+  );
+
+}
+
+async function loadDashboard(user) {
+
+  const userRef =
+    doc(
+      db,
+      "users",
+      String(user.id)
+    );
+
+  const userSnap =
+    await getDoc(userRef);
+
+  const data =
+    userSnap.data();
+
+  if (
+    data.status === "banned"
+  ) {
+
+    document.querySelector(
+      ".loading"
+    ).innerHTML = `
+      <h1>🚫 Account Banned</h1>
+    `;
+
+    return;
+
+  }
+
+  if (
+    data.status === "inactive"
+  ) {
+
+    document.querySelector(
+      ".loading"
+    ).innerHTML = `
       <div class="activate-box">
 
-        <h1>💼 Part Time Job</h1>
+      <h1>
+      💼 Part Time Job
+      </h1>
 
-        <p>Welcome ${user.first_name}</p>
+      <p>
+      Account Not Activated
+      </p>
 
-        <p>❌ Account Not Activated</p>
+      <input
+      id="facebookLink"
+      placeholder="Facebook Profile Link"
+      >
 
-        <input
-          id="facebookLink"
-          placeholder="Facebook Profile Link"
-        >
-
-        <button id="activateBtn">
-          🚀 Activate Account
-        </button>
+      <button
+      id="activateBtn"
+      >
+      Activate Account
+      </button>
 
       </div>
     `;
 
     document
-      .getElementById("activateBtn")
-      .addEventListener("click", async () => {
+    .getElementById(
+      "activateBtn"
+    )
+    .onclick =
+    async () => {
 
-        const facebookLink =
-          document.getElementById("facebookLink").value.trim();
+      const link =
+        document
+        .getElementById(
+          "facebookLink"
+        )
+        .value
+        .trim();
 
-        if (!facebookLink) {
-          alert("Facebook Link Required");
-          return;
-        }
+      if (!link) {
 
-        const fbQuery = query(
-          collection(db, "users"),
-          where("facebookLink", "==", facebookLink)
+        alert(
+          "Facebook Link Required"
         );
 
-        const fbSnap = await getDocs(fbQuery);
+        return;
 
-        let alreadyUsed = false;
+      }
 
-        fbSnap.forEach(docSnap => {
+      await updateDoc(
+        userRef,
+        {
+          facebookLink:
+            link,
 
-          if (docSnap.id !== String(user.id)) {
-            alreadyUsed = true;
-          }
+          status:
+            "active",
 
-        });
-
-        if (alreadyUsed) {
-
-          alert("Facebook Profile Already Used");
-
-          return;
+          activatedAt:
+            serverTimestamp()
         }
+      );
 
-        await updateDoc(userRef, {
-          facebookLink,
-          status: "active",
-          activatedAt: serverTimestamp()
-        });
+      location.reload();
 
-        alert("Account Activated");
-
-        location.reload();
-
-      });
+    };
 
     return;
+
   }
 
-  document.querySelector(".loading").innerHTML = `
-    <div class="dashboard">
+  document.querySelector(
+    ".loading"
+  ).innerHTML = `
 
-      <div class="top-card">
+  <div class="dashboard">
 
-        <h1>💼 Part Time Job</h1>
+  <div class="top-card">
 
-        <h2>Welcome ${user.first_name}</h2>
+  <h1>
+  💼 Part Time Job
+  </h1>
 
-        <div class="coin-box">
-          💰 ${data.coin}
-        </div>
+  <h2>
+  ${data.firstName}
+  </h2>
 
-      </div>
+  <div class="coin-box">
 
-      <div class="stats-grid">
+  💰 ${data.coin}
 
-        <div class="stat-card">
-          <h3>Total Earned</h3>
-          <p>${data.totalEarned || 0}</p>
-        </div>
+  </div>
 
-        <div class="stat-card">
-          <h3>Total Withdraw</h3>
-          <p>${data.totalWithdraw || 0}</p>
-        </div>
+  </div>
 
-        <div class="stat-card">
-          <h3>Referral Earned</h3>
-          <p>${data.referralEarned || 0}</p>
-        </div>
+  <div class="stats-grid">
 
-      </div>
+  <div class="stat-card">
+  <h3>Total Earned</h3>
+  <p>${data.totalEarned || 0}</p>
+  </div>
 
-      <div id="tasksContainer">
-        Loading Tasks...
-      </div>
+  <div class="stat-card">
+  <h3>Referrals</h3>
+  <p>${data.referrals || 0}</p>
+  </div>
 
-    </div>
+  <div class="stat-card">
+  <h3>Withdrawn</h3>
+  <p>${data.totalWithdraw || 0}</p>
+  </div>
+
+  <div class="stat-card">
+  <h3>Status</h3>
+  <p>${data.status}</p>
+  </div>
+
+  </div>
+
+  <div class="card">
+
+  <h3>
+  🚀 Quick Access
+  </h3>
+
+  <p>
+  Complete Tasks, Invite Friends and Earn Coins.
+  </p>
+
+  </div>
+
+  <div class="card">
+
+  <h3>
+  🔔 Latest Update
+  </h3>
+
+  <p>
+  Check Notifications Page For Latest Notices.
+  </p>
+
+  </div>
+
+  </div>
+
   `;
 
-  await loadTasks();
-
-}
-
-async function loadTasks() {
-
-  const q = query(
-    collection(db, "tasks"),
-    where("status", "==", "published")
-  );
-
-  const snap = await getDocs(q);
-
-  let html = `
-    <div class="section-title">
-      📢 Available Tasks
-    </div>
-  `;
-
-  snap.forEach(task => {
-
-    const data = task.data();
-
-    html += `
-      <div class="task-card">
-
-        <h3>${data.name || "Task"}</h3>
-
-        <p>💰 Reward: ${data.coin}</p>
-
-        <p>📂 ${data.type}</p>
-
-        <p>🏷️ ${data.category}</p>
-
-        <button
-          onclick="window.open('${data.link}','_blank')"
-        >
-          Open Task
-        </button>
-
-      </div>
-    `;
-
-  });
-
-  document.getElementById("tasksContainer").innerHTML = html;
-
-            }
+      }

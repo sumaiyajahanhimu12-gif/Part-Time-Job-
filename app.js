@@ -267,6 +267,12 @@ async function loadTasks() {
           Open Task
         </button>
 
+        <button
+          onclick="completeTask('${task.id}')"
+        >
+          ✅ Complete Task
+        </button>
+
       </div>
     `;
 
@@ -274,4 +280,10 @@ async function loadTasks() {
 
   document.getElementById("tasksContainer").innerHTML = html;
 
-               }
+}
+
+window.completeTask = async function(taskId) {
+
+  alert("Task Complete System Ready");
+
+}

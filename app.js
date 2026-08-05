@@ -5,7 +5,12 @@ import {
   getDoc,
   setDoc,
   updateDoc,
-  serverTimestamp
+  serverTimestamp,
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const tg = window.Telegram?.WebApp;
@@ -18,9 +23,17 @@ if (tg) {
 
   if (user) {
     console.log("Start Param:", tg.initDataUnsafe?.start_param);
-alert("Start Param: " + (tg.initDataUnsafe?.start_param || "NONE"));
+    alert("Start Param: " + (tg.initDataUnsafe?.start_param || "NONE"));
     
     await saveUser(user);
+
+    const startParam =
+      tg.initDataUnsafe?.start_param || null;
+
+    if (startParam) {
+      await saveReferral(startParam, user.id);
+    }
+
     await loadUser(user);
   }
 
@@ -61,6 +74,33 @@ async function saveUser(user) {
 
   }
 
+}
+
+async function saveReferral(referrerId, referredId) {
+
+  if (String(referrerId) === String(referredId)) {
+    return;
+  }
+
+  const q = query(
+    collection(db, "pendingReferrals"),
+    where("referredId", "==", String(referredId))
+  );
+
+  const snap = await getDocs(q);
+
+  if (!snap.empty) {
+    return;
+  }
+
+  await addDoc(collection(db, "pendingReferrals"), {
+    referrerId: String(referrerId),
+    referredId: String(referredId),
+    status: "pending",
+    createdAt: serverTimestamp()
+  });
+
+  console.log("Referral Saved");
 }
 
 async function loadUser(user) {

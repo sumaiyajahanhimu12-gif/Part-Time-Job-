@@ -1,1 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+>
+
+<title>Referral System</title>
+
+<link
+rel="stylesheet"
+href="css/style.css"
+>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+</head>
+
+<body>
+
+<div class="dashboard">
+
+<div class="top-card">
+
+<h1>👥 Referral Program</h1>
+
+<p>Invite Friends & Earn More Coins</p>
+
+</div>
+
+<div class="stats-grid">
+
+<div class="stat-card">
+<h3>Total Referrals</h3>
+<p id="totalReferrals">0</p>
+</div>
+
+<div class="stat-card">
+<h3>Active Referrals</h3>
+<p id="activeReferrals">0</p>
+</div>
+
+<div class="stat-card">
+<h3>Referral Income</h3>
+<p id="referralIncome">0</p>
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>🔗 Your Referral Link</h3>
+
+<input
+id="referralLink"
+readonly
+>
+
+<button id="copyReferralBtn">
+
+📋 Copy Referral Link
+
+</button>
+
+</div>
+
+<div class="card">
+
+<h3>📜 Referral List</h3>
+
+<div id="referralList">
+
+Loading...
+
+</div>
+
+</div>
+
+</div>
+
+<nav class="bottom-nav">
+
+<a href="index.html">🏠</a>
+
+<a href="tasks.html">📋</a>
+
+<a href="refer.html">👥</a>
+
+<a href="withdraw.html">💰</a>
+
+<a href="profile.html">👤</a>
+
+</nav>
+
+<script
+type="module"
+src="js/refer.js"
+></script>
+
+</body>
+
+</html>

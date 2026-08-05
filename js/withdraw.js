@@ -3,30 +3,35 @@ import { db } from "./firebase.js";
 import {
   doc,
   getDoc,
-  addDoc,
   collection,
+  addDoc,
+  getDocs,
   query,
   where,
-  getDocs,
   serverTimestamp
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const tg = window.Telegram?.WebApp;
 
-if (!tg) {
+if (!tg || !tg.initDataUnsafe?.user) {
 
-  document.body.innerHTML =
-    "Open Inside Telegram";
-
-  throw new Error();
+  location.href = "index.html";
 
 }
 
-const user =
-  tg.initDataUnsafe?.user;
+const user = tg.initDataUnsafe.user;
 
 loadWithdrawPage();
+
+document
+.getElementById(
+  "withdrawBtn"
+)
+.addEventListener(
+  "click",
+  submitWithdraw
+);
 
 async function loadWithdrawPage() {
 
@@ -52,125 +57,155 @@ async function loadWithdrawPage() {
     doc(
       db,
       "settings",
-      "withdraw"
+      "system"
     );
 
   const settingsSnap =
     await getDoc(settingsRef);
 
-  let minAmount = 50000;
-  let enabled = false;
+  let minWithdraw = 50000;
+  let withdrawEnabled = true;
 
   if (settingsSnap.exists()) {
 
     const settings =
       settingsSnap.data();
 
-    minAmount =
-      settings.minAmount || 50000;
+    minWithdraw =
+      settings.minWithdraw || 50000;
 
-    enabled =
-      settings.enabled || false;
+    withdrawEnabled =
+      settings.withdrawEnabled;
 
   }
 
   document.getElementById(
     "minWithdraw"
   ).innerText =
-    minAmount;
+    minWithdraw;
 
   document.getElementById(
     "withdrawStatus"
   ).innerText =
-    enabled
-      ? "✅ Withdraw Open"
-      : "❌ Withdraw Closed";
+    withdrawEnabled
+    ? "✅ Withdraw Open"
+    : "❌ Withdraw Closed";
 
-  document
-    .getElementById(
-      "withdrawBtn"
-    )
-    .addEventListener(
-      "click",
-      async () => {
-
-      if (!enabled) {
-
-        alert(
-          "Withdraw Closed"
-        );
-
-        return;
-
-      }
-
-      if (
-        userData.coin <
-        minAmount
-      ) {
-
-        alert(
-          "Minimum Withdraw Not Reached"
-        );
-
-        return;
-
-      }
-
-      const number =
-        document.getElementById(
-          "paymentNumber"
-        ).value.trim();
-
-      if (!number) {
-
-        alert(
-          "Payment Number Required"
-        );
-
-        return;
-
-      }
-
-      await addDoc(
-        collection(
-          db,
-          "withdraws"
-        ),
-        {
-          telegramId:
-            String(user.id),
-
-          coin:
-            userData.coin,
-
-          paymentNumber:
-            number,
-
-          facebookLink:
-            userData.facebookLink || "",
-
-          status:
-            "pending",
-
-          createdAt:
-            serverTimestamp()
-        }
-      );
-
-      alert(
-        "Withdraw Request Submitted"
-      );
-
-      location.reload();
-
-    });
-
-  loadWithdrawHistory();
+  loadHistory();
 
 }
 
-async function loadWithdrawHistory() {
+async function submitWithdraw() {
+
+  const paymentNumber =
+    document.getElementById(
+      "paymentNumber"
+    ).value.trim();
+
+  if (!paymentNumber) {
+
+    alert(
+      "Payment Number Required"
+    );
+
+    return;
+
+  }
+
+  const userRef =
+    doc(
+      db,
+      "users",
+      String(user.id)
+    );
+
+  const userSnap =
+    await getDoc(userRef);
+
+  const userData =
+    userSnap.data();
+
+  const settingsRef =
+    doc(
+      db,
+      "settings",
+      "system"
+    );
+
+  const settingsSnap =
+    await getDoc(settingsRef);
+
+  const settings =
+    settingsSnap.exists()
+    ? settingsSnap.data()
+    : {};
+
+  const minWithdraw =
+    settings.minWithdraw || 50000;
+
+  const withdrawEnabled =
+    settings.withdrawEnabled ?? true;
+
+  if (!withdrawEnabled) {
+
+    alert(
+      "Withdraw Currently Closed"
+    );
+
+    return;
+
+  }
+
+  if (
+    (userData.coin || 0)
+    < minWithdraw
+  ) {
+
+    alert(
+      `Minimum ${minWithdraw} Coins Required`
+    );
+
+    return;
+
+  }
+
+  await addDoc(
+    collection(
+      db,
+      "withdraws"
+    ),
+    {
+      userId:
+        String(user.id),
+
+      username:
+        user.username || "",
+
+      facebookLink:
+        userData.facebookLink || "",
+
+      coin:
+        userData.coin,
+
+      paymentNumber,
+
+      status:
+        "pending",
+
+      createdAt:
+        serverTimestamp()
+    }
+  );
+
+  alert(
+    "Withdraw Request Submitted"
+  );
+
+  location.reload();
+
+}
+
+async function loadHistory() {
 
   const q =
     query(
@@ -179,7 +214,7 @@ async function loadWithdrawHistory() {
         "withdraws"
       ),
       where(
-        "telegramId",
+        "userId",
         "==",
         String(user.id)
       )
@@ -190,41 +225,38 @@ async function loadWithdrawHistory() {
 
   let html = "";
 
-  if (snap.empty) {
+  snap.forEach(item => {
 
-    html =
-      "No Withdraw History";
+    const data =
+      item.data();
 
-  } else {
+    html += `
 
-    snap.forEach(item => {
-
-      const data =
-        item.data();
-
-      html += `
-
-      <div class="task-card">
-
-      <h3>
-      ${data.coin} Coins
-      </h3>
+    <div class="task-card">
 
       <p>
-      ${data.status}
+      💰 ${data.coin}
+      Coins
       </p>
 
-      </div>
+      <p>
+      📱 ${data.paymentNumber}
+      </p>
 
-      `;
+      <p>
+      📌 ${data.status}
+      </p>
 
-    });
+    </div>
 
-  }
+    `;
+
+  });
 
   document.getElementById(
     "withdrawHistory"
   ).innerHTML =
-    html;
+    html ||
+    "<p>No Withdraw History</p>";
 
-}
+        }

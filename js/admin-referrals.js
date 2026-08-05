@@ -1,8 +1,10 @@
-import { db } from "./firebase.js";
+import { db } from "../js/firebase.js";
 
 import {
   collection,
-  getDocs
+  getDocs,
+  updateDoc,
+  doc
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -18,11 +20,11 @@ async function loadReferrals() {
       )
     );
 
-  let html = "";
-
   let pending = 0;
   let active = 0;
   let total = 0;
+
+  let html = "";
 
   snap.forEach(item => {
 
@@ -45,28 +47,42 @@ async function loadReferrals() {
 
     html += `
 
-    <div class="section-card">
+      <div class="section-card">
 
-    <h3>
-    Referral Record
-    </h3>
+        <h3>
+          Referral
+        </h3>
 
-    <p>
-    Referrer:
-    ${data.referrerId}
-    </p>
+        <p>
+          👤 Referrer:
+          ${data.referrerId}
+        </p>
 
-    <p>
-    Referred User:
-    ${data.referredId}
-    </p>
+        <p>
+          👥 Referred:
+          ${data.referredId}
+        </p>
 
-    <p>
-    Status:
-    ${data.status}
-    </p>
+        <p>
+          📌 Status:
+          ${data.status}
+        </p>
 
-    </div>
+        ${
+          data.status === "pending"
+          ?
+          `
+          <button
+            onclick="approveReferral('${item.id}')"
+          >
+            ✅ Approve
+          </button>
+          `
+          :
+          ""
+        }
+
+      </div>
 
     `;
 
@@ -90,6 +106,37 @@ async function loadReferrals() {
   document.getElementById(
     "referralsContainer"
   ).innerHTML =
-    html;
+    html ||
+    `
+    <div class="section-card">
+      No Referrals Found
+    </div>
+    `;
 
+}
+
+window.approveReferral =
+async function(id) {
+
+  const ok =
+    confirm(
+      "Approve Referral?"
+    );
+
+  if (!ok)
+    return;
+
+  await updateDoc(
+    doc(
+      db,
+      "pendingReferrals",
+      id
+    ),
+    {
+      status: "active"
     }
+  );
+
+  location.reload();
+
+};

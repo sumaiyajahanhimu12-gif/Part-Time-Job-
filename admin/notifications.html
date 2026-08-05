@@ -1,1 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+>
+
+<title>Admin Notifications</title>
+
+<link
+rel="stylesheet"
+href="../css/admin.css"
+>
+
+</head>
+
+<body>
+
+<div class="admin-container">
+
+<div class="admin-header">
+
+<h1>📢 Notifications</h1>
+
+<p>Create Notices & Announcements</p>
+
+</div>
+
+<div class="section-card">
+
+<input
+id="noticeTitle"
+placeholder="Notice Title"
+>
+
+<textarea
+id="noticeMessage"
+placeholder="Notice Message"
+style="width:100%;height:120px;padding:12px;border-radius:10px;background:#1e293b;color:white;"
+></textarea>
+
+<br><br>
+
+<button id="publishNoticeBtn">
+
+📢 Publish Notice
+
+</button>
+
+</div>
+
+<div id="noticeList">
+
+Loading...
+
+</div>
+
+</div>
+
+<script
+type="module"
+src="../js/admin-notifications.js"
+></script>
+
+</body>
+
+</html>

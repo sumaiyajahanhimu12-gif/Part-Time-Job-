@@ -8,17 +8,13 @@ from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const tg = window.Telegram?.WebApp;
 
-if (!tg) {
+if (!tg || !tg.initDataUnsafe?.user) {
 
-  document.body.innerHTML =
-    "Open Inside Telegram";
-
-  throw new Error();
+  location.href = "index.html";
 
 }
 
-const user =
-  tg.initDataUnsafe?.user;
+const user = tg.initDataUnsafe.user;
 
 loadProfile();
 
@@ -48,7 +44,7 @@ async function loadProfile() {
   document.getElementById(
     "profileName"
   ).innerText =
-    `${data.firstName || ""} ${data.lastName || ""}`;
+    data.firstName || "User";
 
   document.getElementById(
     "telegramId"
@@ -59,13 +55,19 @@ async function loadProfile() {
     "username"
   ).innerText =
     data.username
-      ? "@" + data.username
-      : "No Username";
+    ? "@" + data.username
+    : "No Username";
 
   document.getElementById(
     "facebookLink"
-  ).innerText =
-    data.facebookLink || "-";
+  ).innerHTML =
+    data.facebookLink
+    ?
+    `<a href="${data.facebookLink}" target="_blank">
+      Open Facebook Profile
+    </a>`
+    :
+    "Not Added";
 
   document.getElementById(
     "coinBalance"
@@ -87,9 +89,24 @@ async function loadProfile() {
   ).innerText =
     data.status || "inactive";
 
-  document.getElementById(
-    "joinDate"
-  ).innerText =
-    "Account Created Successfully";
+  if (data.createdAt) {
+
+    const joinDate =
+      data.createdAt.toDate();
+
+    document.getElementById(
+      "joinDate"
+    ).innerText =
+      "Joined: " +
+      joinDate.toLocaleDateString();
+
+  } else {
+
+    document.getElementById(
+      "joinDate"
+    ).innerText =
+      "Join Date Unavailable";
+
+  }
 
 }

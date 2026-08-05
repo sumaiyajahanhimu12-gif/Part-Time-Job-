@@ -15,6 +15,7 @@ const tg = window.Telegram?.WebApp;
 if (!tg || !tg.initDataUnsafe?.user) {
 
   location.href = "index.html";
+  throw new Error("Telegram Required");
 
 }
 
@@ -40,8 +41,11 @@ async function loadReferralData() {
   const userData =
     userSnap.data();
 
+  const botUsername =
+    "PartTimeIncomeofficial_bot";
+
   const referralLink =
-    `https://t.me/PartTimeIncomeofficial_bot?start=${user.id}`;
+    `https://t.me/${botUsername}?start=${user.id}`;
 
   document.getElementById(
     "referralLink"
@@ -62,7 +66,9 @@ async function loadReferralData() {
     );
 
   const referralSnap =
-    await getDocs(referralQuery);
+    await getDocs(
+      referralQuery
+    );
 
   let total = 0;
   let active = 0;
@@ -86,15 +92,23 @@ async function loadReferralData() {
 
       <div class="task-card">
 
-      <p>
-      👤 User:
-      ${data.referredId}
-      </p>
+        <h3>
+          👤 User
+        </h3>
 
-      <p>
-      📌 Status:
-      ${data.status}
-      </p>
+        <p>
+          Telegram ID:
+          ${data.referredId}
+        </p>
+
+        <p>
+          Status:
+          ${
+            data.status === "active"
+            ? "✅ Active"
+            : "⏳ Pending"
+          }
+        </p>
 
       </div>
 
@@ -120,32 +134,40 @@ async function loadReferralData() {
   document.getElementById(
     "referralList"
   ).innerHTML =
-    html || `
-    <p>No Referrals Yet</p>
+    html ||
+    `
+    <div class="card">
+      No Referrals Yet
+    </div>
     `;
 
 }
 
-document
-.getElementById(
+const copyBtn =
+document.getElementById(
   "copyReferralBtn"
-)
-.addEventListener(
-  "click",
-  async () => {
-
-    const link =
-      document.getElementById(
-        "referralLink"
-      ).value;
-
-    await navigator.clipboard.writeText(
-      link
-    );
-
-    alert(
-      "Referral Link Copied"
-    );
-
-  }
 );
+
+if (copyBtn) {
+
+  copyBtn.addEventListener(
+    "click",
+    async () => {
+
+      const link =
+        document.getElementById(
+          "referralLink"
+        ).value;
+
+      await navigator.clipboard.writeText(
+        link
+      );
+
+      alert(
+        "Referral Link Copied Successfully"
+      );
+
+    }
+  );
+
+}

@@ -1,8 +1,10 @@
-import { db } from "./firebase.js";
+import { db } from "../js/firebase.js";
 
 import {
   collection,
-  getDocs
+  getDocs,
+  updateDoc,
+  doc
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -12,16 +14,19 @@ async function loadSecurity() {
 
   const snap =
     await getDocs(
-      collection(db,"users")
+      collection(
+        db,
+        "users"
+      )
     );
 
-  let users = [];
+  const users = [];
 
-  snap.forEach(doc => {
+  snap.forEach(item => {
 
     users.push({
-      id: doc.id,
-      ...doc.data()
+      id: item.id,
+      ...item.data()
     });
 
   });
@@ -30,8 +35,6 @@ async function loadSecurity() {
     "totalUsers"
   ).innerText =
     users.length;
-
-  let html = "";
 
   let duplicateFacebook = 0;
   let duplicateFingerprint = 0;
@@ -58,14 +61,18 @@ async function loadSecurity() {
 
   });
 
+  let html = "";
+
   users.forEach(user => {
 
     let suspicious = false;
 
     const fbDuplicate =
+      user.facebookLink &&
       facebookMap[user.facebookLink] > 1;
 
     const fpDuplicate =
+      user.fingerprint &&
       fingerprintMap[user.fingerprint] > 1;
 
     if (fbDuplicate) {
@@ -90,29 +97,36 @@ async function loadSecurity() {
 
       <div class="section-card">
 
-      <h3>
-      🚨 Suspicious User
-      </h3>
+        <h3>
+          🚨 Suspicious Account
+        </h3>
 
-      <p>
-      Telegram ID:
-      ${user.telegramId}
-      </p>
+        <p>
+          Telegram ID:
+          ${user.telegramId || "-"}
+        </p>
 
-      <p>
-      Username:
-      ${user.username || "No Username"}
-      </p>
+        <p>
+          Username:
+          ${user.username || "-"}
+        </p>
 
-      <p>
-      Facebook:
-      ${user.facebookLink || "-"}
-      </p>
+        <p>
+          Facebook:
+          ${user.facebookLink || "-"}
+        </p>
 
-      <p>
-      Status:
-      ${user.status}
-      </p>
+        <p>
+          Status:
+          ${user.status || "-"}
+        </p>
+
+        <button
+          onclick="banUser('${user.id}')"
+          style="background:#dc2626;"
+        >
+          🚫 Ban User
+        </button>
 
       </div>
 
@@ -140,10 +154,41 @@ async function loadSecurity() {
   document.getElementById(
     "securityContainer"
   ).innerHTML =
-    html || `
+    html ||
+    `
       <div class="section-card">
-      <h3>✅ No Suspicious Accounts Found</h3>
+        <h3>✅ No Suspicious Accounts Found</h3>
       </div>
     `;
 
 }
+
+window.banUser =
+async function(userId) {
+
+  const ok =
+    confirm(
+      "Ban This User?"
+    );
+
+  if (!ok)
+    return;
+
+  await updateDoc(
+    doc(
+      db,
+      "users",
+      userId
+    ),
+    {
+      status: "banned"
+    }
+  );
+
+  alert(
+    "User Banned Successfully"
+  );
+
+  location.reload();
+
+};

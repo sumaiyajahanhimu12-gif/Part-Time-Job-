@@ -46,12 +46,43 @@ if (tg) {
 
 }
 
+function generateFingerprint() {
+
+  return btoa(
+    navigator.userAgent +
+    screen.width +
+    screen.height +
+    navigator.language +
+    Intl.DateTimeFormat().resolvedOptions().timeZone
+  );
+
+}
+
 async function saveUser(user) {
 
   const userRef = doc(db, "users", String(user.id));
   const userSnap = await getDoc(userRef);
 
   if (!userSnap.exists()) {
+
+    const fingerprint = generateFingerprint();
+
+    const fpQuery = query(
+      collection(db, "users"),
+      where("fingerprint", "==", fingerprint)
+    );
+
+    const fpSnap = await getDocs(fpQuery);
+
+    if (!fpSnap.empty) {
+
+      document.querySelector(".loading").innerHTML = `
+        <h1>🚫 Device Blocked</h1>
+        <p>Only one account allowed per device.</p>
+      `;
+
+      throw new Error("Device already used");
+    }
 
     await setDoc(userRef, {
       telegramId: user.id,
@@ -66,7 +97,10 @@ async function saveUser(user) {
       status: "inactive",
 
       facebookLink: "",
+
       deviceId: "",
+      fingerprint: fingerprint,
+
       activatedAt: null,
 
       createdAt: serverTimestamp()
@@ -135,10 +169,34 @@ async function loadUser(user) {
       .addEventListener("click", async () => {
 
         const facebookLink =
-          document.getElementById("facebookLink").value;
+          document.getElementById("facebookLink").value.trim();
 
         if (!facebookLink) {
           alert("Facebook Link Required");
+          return;
+        }
+
+        const fbQuery = query(
+          collection(db, "users"),
+          where("facebookLink", "==", facebookLink)
+        );
+
+        const fbSnap = await getDocs(fbQuery);
+
+        let alreadyUsed = false;
+
+        fbSnap.forEach(doc => {
+
+          if (doc.id !== String(user.id)) {
+            alreadyUsed = true;
+          }
+
+        });
+
+        if (alreadyUsed) {
+
+          alert("Facebook Profile Already Used");
+
           return;
         }
 

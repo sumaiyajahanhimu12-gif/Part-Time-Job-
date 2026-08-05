@@ -2,7 +2,11 @@ import { db } from "./firebase.js";
 
 import {
   doc,
-  getDoc
+  getDoc,
+  collection,
+  getDocs,
+  query,
+  where
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -11,6 +15,8 @@ const tg = window.Telegram?.WebApp;
 if (!tg || !tg.initDataUnsafe?.user) {
 
   location.href = "index.html";
+
+  throw new Error("Telegram Required");
 
 }
 
@@ -44,7 +50,7 @@ async function loadProfile() {
   document.getElementById(
     "profileName"
   ).innerText =
-    data.firstName || "User";
+    `${data.firstName || ""} ${data.lastName || ""}`;
 
   document.getElementById(
     "telegramId"
@@ -62,12 +68,16 @@ async function loadProfile() {
     "facebookLink"
   ).innerHTML =
     data.facebookLink
-    ?
-    `<a href="${data.facebookLink}" target="_blank">
+    ? `
+      <a
+      href="${data.facebookLink}"
+      target="_blank"
+      style="color:#1CE783;"
+      >
       Open Facebook Profile
-    </a>`
-    :
-    "Not Added";
+      </a>
+    `
+    : "Not Added";
 
   document.getElementById(
     "coinBalance"
@@ -109,4 +119,61 @@ async function loadProfile() {
 
   }
 
+  await loadExtraStats();
+
 }
+
+async function loadExtraStats() {
+
+  const withdrawQuery =
+    query(
+      collection(
+        db,
+        "withdraws"
+      ),
+      where(
+        "userId",
+        "==",
+        String(user.id)
+      )
+    );
+
+  const withdrawSnap =
+    await getDocs(
+      withdrawQuery
+    );
+
+  let withdrawCount = 0;
+
+  withdrawSnap.forEach(() => {
+
+    withdrawCount++;
+
+  });
+
+  const profileCard =
+    document.querySelector(
+      ".dashboard"
+    );
+
+  profileCard.insertAdjacentHTML(
+    "beforeend",
+    `
+
+    <div class="card">
+
+      <h3>
+      📊 Extra Statistics
+      </h3>
+
+      <p>
+      Total Withdraw Requests:
+      ${withdrawCount}
+      </p>
+
+    </div>
+
+    `
+  );
+
+}}

@@ -5,6 +5,9 @@ import {
   getDoc,
   collection,
   addDoc,
+  getDocs,
+  query,
+  where,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -20,9 +23,12 @@ if (!tg) {
 
 }
 
+tg.expand();
+
 const user = tg.initDataUnsafe?.user;
 
 await checkAdmin();
+await loadDashboardStats();
 
 async function checkAdmin() {
 
@@ -41,6 +47,55 @@ async function checkAdmin() {
     throw new Error("Not Admin");
 
   }
+
+}
+
+async function loadDashboardStats() {
+
+  const usersSnap =
+    await getDocs(collection(db, "users"));
+
+  const tasksSnap =
+    await getDocs(collection(db, "tasks"));
+
+  const withdrawsSnap =
+    await getDocs(collection(db, "withdraws"));
+
+  const activeUsersSnap =
+    await getDocs(
+      query(
+        collection(db, "users"),
+        where("status", "==", "active")
+      )
+    );
+
+  const totalUsersEl =
+    document.getElementById("totalUsers");
+
+  const activeUsersEl =
+    document.getElementById("activeUsers");
+
+  const totalTasksEl =
+    document.getElementById("totalTasks");
+
+  const pendingWithdrawsEl =
+    document.getElementById("pendingWithdraws");
+
+  if (totalUsersEl)
+    totalUsersEl.textContent =
+      usersSnap.size;
+
+  if (activeUsersEl)
+    activeUsersEl.textContent =
+      activeUsersSnap.size;
+
+  if (totalTasksEl)
+    totalTasksEl.textContent =
+      tasksSnap.size;
+
+  if (pendingWithdrawsEl)
+    pendingWithdrawsEl.textContent =
+      withdrawsSnap.size;
 
 }
 
@@ -101,20 +156,20 @@ async function createTask() {
     {
       name,
       link,
-
       coin,
 
-      code,
+      code: code || "",
 
-      timer,
+      timer: timer || 0,
 
-      limit,
+      limit: limit || 0,
 
       taskType,
 
       status,
 
-      trending: false,
+      trending:
+        status === "trending",
 
       completedCount: 0,
 
@@ -123,7 +178,7 @@ async function createTask() {
     }
   );
 
-  alert("Task Created Successfully");
+  alert("✅ Task Created Successfully");
 
   location.reload();
 

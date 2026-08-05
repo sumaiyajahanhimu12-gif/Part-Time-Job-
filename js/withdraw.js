@@ -18,20 +18,27 @@ if (!tg || !tg.initDataUnsafe?.user) {
 
   location.href = "index.html";
 
+  throw new Error("Telegram Required");
+
 }
 
 const user = tg.initDataUnsafe.user;
 
 loadWithdrawPage();
 
-document
-.getElementById(
+const withdrawBtn =
+document.getElementById(
   "withdrawBtn"
-)
-.addEventListener(
-  "click",
-  submitWithdraw
 );
+
+if (withdrawBtn) {
+
+  withdrawBtn.addEventListener(
+    "click",
+    submitWithdraw
+  );
+
+}
 
 async function loadWithdrawPage() {
 
@@ -44,6 +51,9 @@ async function loadWithdrawPage() {
 
   const userSnap =
     await getDoc(userRef);
+
+  if (!userSnap.exists())
+    return;
 
   const userData =
     userSnap.data();
@@ -61,12 +71,17 @@ async function loadWithdrawPage() {
     );
 
   const settingsSnap =
-    await getDoc(settingsRef);
+    await getDoc(
+      settingsRef
+    );
 
   let minWithdraw = 50000;
+
   let withdrawEnabled = true;
 
-  if (settingsSnap.exists()) {
+  if (
+    settingsSnap.exists()
+  ) {
 
     const settings =
       settingsSnap.data();
@@ -75,7 +90,7 @@ async function loadWithdrawPage() {
       settings.minWithdraw || 50000;
 
     withdrawEnabled =
-      settings.withdrawEnabled;
+      settings.withdrawEnabled ?? true;
 
   }
 
@@ -86,12 +101,12 @@ async function loadWithdrawPage() {
 
   document.getElementById(
     "withdrawStatus"
-  ).innerText =
+  ).innerHTML =
     withdrawEnabled
     ? "✅ Withdraw Open"
     : "❌ Withdraw Closed";
 
-  loadHistory();
+  await loadHistory();
 
 }
 
@@ -122,6 +137,9 @@ async function submitWithdraw() {
   const userSnap =
     await getDoc(userRef);
 
+  if (!userSnap.exists())
+    return;
+
   const userData =
     userSnap.data();
 
@@ -133,7 +151,9 @@ async function submitWithdraw() {
     );
 
   const settingsSnap =
-    await getDoc(settingsRef);
+    await getDoc(
+      settingsRef
+    );
 
   const settings =
     settingsSnap.exists()
@@ -169,36 +189,74 @@ async function submitWithdraw() {
 
   }
 
+  const pendingQuery =
+    query(
+      collection(
+        db,
+        "withdraws"
+      ),
+      where(
+        "userId",
+        "==",
+        String(user.id)
+      ),
+      where(
+        "status",
+        "==",
+        "pending"
+      )
+    );
+
+  const pendingSnap =
+    await getDocs(
+      pendingQuery
+    );
+
+  if (!pendingSnap.empty) {
+
+    alert(
+      "You Already Have A Pending Withdraw"
+    );
+
+    return;
+
+  }
+
   await addDoc(
     collection(
       db,
       "withdraws"
     ),
     {
+
       userId:
         String(user.id),
 
       username:
         user.username || "",
 
-      facebookLink:
-        userData.facebookLink || "",
+      firstName:
+        user.first_name || "",
 
       coin:
-        userData.coin,
+        userData.coin || 0,
 
       paymentNumber,
+
+      facebookLink:
+        userData.facebookLink || "",
 
       status:
         "pending",
 
       createdAt:
         serverTimestamp()
+
     }
   );
 
   alert(
-    "Withdraw Request Submitted"
+    "Withdraw Request Submitted Successfully"
   );
 
   location.reload();
@@ -230,24 +288,38 @@ async function loadHistory() {
     const data =
       item.data();
 
+    let badge = "⏳ Pending";
+
+    if (
+      data.status === "approved"
+    ) {
+      badge = "✅ Approved";
+    }
+
+    if (
+      data.status === "rejected"
+    ) {
+      badge = "❌ Rejected";
+    }
+
     html += `
 
-    <div class="task-card">
+      <div class="task-card">
 
-      <p>
-      💰 ${data.coin}
-      Coins
-      </p>
+        <h3>
+        💰 ${data.coin}
+        Coins
+        </h3>
 
-      <p>
-      📱 ${data.paymentNumber}
-      </p>
+        <p>
+        📱 ${data.paymentNumber}
+        </p>
 
-      <p>
-      📌 ${data.status}
-      </p>
+        <p>
+        ${badge}
+        </p>
 
-    </div>
+      </div>
 
     `;
 
@@ -257,6 +329,10 @@ async function loadHistory() {
     "withdrawHistory"
   ).innerHTML =
     html ||
-    "<p>No Withdraw History</p>";
+    `
+    <div class="card">
+    No Withdraw History
+    </div>
+    `;
 
-        }
+}

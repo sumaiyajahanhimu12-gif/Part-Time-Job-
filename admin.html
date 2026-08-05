@@ -1,1 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Admin Panel</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="loading">
+
+<h1>🛠 Admin Panel</h1>
+
+<input id="taskName" placeholder="Task Name">
+
+<input id="taskLink" placeholder="Task Link">
+
+<input id="taskCoin" type="number" placeholder="Coin Reward">
+
+<input id="taskCode" placeholder="Code (optional)">
+
+<input id="taskTimer" type="number" placeholder="Timer Seconds">
+
+<input id="taskLimit" type="number" placeholder="Limit (0 = Unlimited)">
+
+<select id="taskType">
+<option value="daily">Daily</option>
+<option value="weekly">Weekly</option>
+<option value="permanent">Permanent</option>
+</select>
+
+<select id="taskStatus">
+<option value="publish">Publish</option>
+<option value="trending">Trending</option>
+</select>
+
+<button id="createTaskBtn">
+Create Task
+</button>
+
+</div>
+
+<script type="module" src="admin.js"></script>
+
+</body>
+</html>

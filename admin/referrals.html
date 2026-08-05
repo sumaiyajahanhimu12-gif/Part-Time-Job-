@@ -1,1 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+>
+
+<title>Referral Management</title>
+
+<link
+rel="stylesheet"
+href="../css/admin.css"
+>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+</head>
+
+<body>
+
+<div class="admin-container">
+
+<div class="admin-header">
+
+<h1>👥 Referral Management</h1>
+
+<p>Track All Referral Activities</p>
+
+</div>
+
+<div class="stats-grid">
+
+<div class="stat-card">
+<h3>Pending</h3>
+<p id="pendingReferrals">0</p>
+</div>
+
+<div class="stat-card">
+<h3>Active</h3>
+<p id="activeReferrals">0</p>
+</div>
+
+<div class="stat-card">
+<h3>Total</h3>
+<p id="totalReferrals">0</p>
+</div>
+
+</div>
+
+<div id="referralsContainer">
+
+Loading Referrals...
+
+</div>
+
+</div>
+
+<script
+type="module"
+src="../js/admin-referrals.js"
+></script>
+
+</body>
+
+</html>

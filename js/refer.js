@@ -4,29 +4,25 @@ import {
   doc,
   getDoc,
   collection,
+  getDocs,
   query,
-  where,
-  getDocs
+  where
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const tg = window.Telegram?.WebApp;
 
-if (!tg) {
+if (!tg || !tg.initDataUnsafe?.user) {
 
-  document.body.innerHTML =
-    "Open Inside Telegram";
-
-  throw new Error();
+  location.href = "index.html";
 
 }
 
-const user =
-  tg.initDataUnsafe?.user;
+const user = tg.initDataUnsafe.user;
 
-loadReferralPage();
+loadReferralData();
 
-async function loadReferralPage() {
+async function loadReferralData() {
 
   const userRef =
     doc(
@@ -38,110 +34,118 @@ async function loadReferralPage() {
   const userSnap =
     await getDoc(userRef);
 
+  if (!userSnap.exists())
+    return;
+
   const userData =
     userSnap.data();
 
-  document.getElementById(
-    "totalReferrals"
-  ).innerText =
-    userData.referrals || 0;
-
-  document.getElementById(
-    "activeReferrals"
-  ).innerText =
-    userData.activeReferrals || 0;
-
-  document.getElementById(
-    "referralIncome"
-  ).innerText =
-    userData.referralEarned || 0;
-
   const referralLink =
-
-`https://t.me/PartTimeIncomeofficial_bot/parttimejob?startapp=${user.id}`;
+    `https://t.me/PartTimeIncomeofficial_bot?start=${user.id}`;
 
   document.getElementById(
     "referralLink"
   ).value =
     referralLink;
 
-  document
-    .getElementById(
-      "copyReferralBtn"
-    )
-    .addEventListener(
-      "click",
-      () => {
+  const referralQuery =
+    query(
+      collection(
+        db,
+        "pendingReferrals"
+      ),
+      where(
+        "referrerId",
+        "==",
+        String(user.id)
+      )
+    );
 
-      navigator.clipboard.writeText(
-        referralLink
-      );
+  const referralSnap =
+    await getDocs(referralQuery);
 
-      alert(
-        "Referral Link Copied"
-      );
-
-    });
-
-  loadReferralList();
-
-}
-
-async function loadReferralList() {
-
-  const q = query(
-    collection(
-      db,
-      "pendingReferrals"
-    ),
-    where(
-      "referrerId",
-      "==",
-      String(user.id)
-    )
-  );
-
-  const snap =
-    await getDocs(q);
+  let total = 0;
+  let active = 0;
 
   let html = "";
 
-  if (snap.empty) {
+  referralSnap.forEach(item => {
 
-    html =
-      "No Referrals Yet";
+    const data =
+      item.data();
 
-  } else {
+    total++;
 
-    snap.forEach(ref => {
+    if (
+      data.status === "active"
+    ) {
+      active++;
+    }
 
-      const data =
-        ref.data();
-
-      html += `
+    html += `
 
       <div class="task-card">
 
-      <h3>
+      <p>
+      👤 User:
       ${data.referredId}
-      </h3>
+      </p>
 
       <p>
-      Status:
+      📌 Status:
       ${data.status}
       </p>
 
       </div>
 
-      `;
+    `;
 
-    });
+  });
 
-  }
+  document.getElementById(
+    "totalReferrals"
+  ).innerText =
+    total;
+
+  document.getElementById(
+    "activeReferrals"
+  ).innerText =
+    active;
+
+  document.getElementById(
+    "referralIncome"
+  ).innerText =
+    userData.referralIncome || 0;
 
   document.getElementById(
     "referralList"
   ).innerHTML =
-    html;
+    html || `
+    <p>No Referrals Yet</p>
+    `;
 
 }
+
+document
+.getElementById(
+  "copyReferralBtn"
+)
+.addEventListener(
+  "click",
+  async () => {
+
+    const link =
+      document.getElementById(
+        "referralLink"
+      ).value;
+
+    await navigator.clipboard.writeText(
+      link
+    );
+
+    alert(
+      "Referral Link Copied"
+    );
+
+  }
+);

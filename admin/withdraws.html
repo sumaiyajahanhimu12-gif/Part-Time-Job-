@@ -2,69 +2,51 @@
 <html lang="en">
 
 <head>
-
 <meta charset="UTF-8">
-
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0"
->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Withdraw Requests</title>
 
-<link
-rel="stylesheet"
-href="../css/admin.css"
->
+<link rel="stylesheet" href="../css/admin.css">
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
 </head>
 
 <body>
 
 <div class="admin-container">
 
-<div class="admin-header">
+  <div class="admin-header">
+    <h1>💰 Withdraw Requests</h1>
+    <p>Manage User Withdraw Requests</p>
+  </div>
 
-<h1>💰 Withdraw Requests</h1>
+  <div class="stats-grid">
 
-<p>Manage User Withdraw Requests</p>
+    <div class="stat-card">
+      <h3>Pending</h3>
+      <p id="pendingCount">0</p>
+    </div>
 
-</div>
+    <div class="stat-card">
+      <h3>Approved</h3>
+      <p id="approvedCount">0</p>
+    </div>
 
-<div class="stats-grid">
+    <div class="stat-card">
+      <h3>Rejected</h3>
+      <p id="rejectedCount">0</p>
+    </div>
 
-<div class="stat-card">
-<h3>Pending</h3>
-<p id="pendingCount">0</p>
-</div>
+  </div>
 
-<div class="stat-card">
-<h3>Approved</h3>
-<p id="approvedCount">0</p>
-</div>
-
-<div class="stat-card">
-<h3>Rejected</h3>
-<p id="rejectedCount">0</p>
-</div>
-
-</div>
-
-<div id="withdrawsContainer">
-
-Loading Withdraw Requests...
+  <div id="withdrawsContainer">
+    Loading Withdraw Requests...
+  </div>
 
 </div>
 
-</div>
-
-<script
-type="module"
-src="../js/admin-withdraws.js"
-></script>
+<script type="module" src="../js/admin-withdraws.js"></script>
 
 </body>
-
 </html>

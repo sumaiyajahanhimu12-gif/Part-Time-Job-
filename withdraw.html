@@ -2,23 +2,14 @@
 <html lang="en">
 
 <head>
-
 <meta charset="UTF-8">
-
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0"
->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Withdraw</title>
 
-<link
-rel="stylesheet"
-href="css/style.css"
->
+<link rel="stylesheet" href="css/style.css">
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
 </head>
 
 <body>
@@ -26,11 +17,8 @@ href="css/style.css"
 <div class="dashboard">
 
 <div class="top-card">
-
 <h1>💰 Withdraw</h1>
-
 <p>Request Your Earnings</p>
-
 </div>
 
 <div class="stats-grid">
@@ -48,28 +36,31 @@ href="css/style.css"
 </div>
 
 <div class="card">
-
 <h3>Withdraw Status</h3>
-
-<p id="withdrawStatus">
-Loading...
-</p>
-
+<p id="withdrawStatus">Loading...</p>
 </div>
 
 <div class="card">
 
-<h3>Payment Number</h3>
+<h3>Payment Method</h3>
+
+<select id="paymentMethod">
+<option value="">Select Method</option>
+<option value="Bkash">Bkash</option>
+<option value="Nagad">Nagad</option>
+</select>
+
+<br><br>
 
 <input
 id="paymentNumber"
-placeholder="Bkash / Nagad Number"
+placeholder="Enter Payment Number"
 >
 
+<br><br>
+
 <button id="withdrawBtn">
-
 💸 Request Withdraw
-
 </button>
 
 </div>
@@ -79,9 +70,7 @@ placeholder="Bkash / Nagad Number"
 <h3>Withdraw History</h3>
 
 <div id="withdrawHistory">
-
 Loading...
-
 </div>
 
 </div>
@@ -89,24 +78,14 @@ Loading...
 </div>
 
 <nav class="bottom-nav">
-
 <a href="index.html">🏠</a>
-
 <a href="tasks.html">📋</a>
-
 <a href="refer.html">👥</a>
-
 <a href="withdraw.html">💰</a>
-
 <a href="profile.html">👤</a>
-
 </nav>
 
-<script
-type="module"
-src="js/withdraw.js"
-></script>
+<script type="module" src="js/withdraw.js"></script>
 
 </body>
-
 </html>

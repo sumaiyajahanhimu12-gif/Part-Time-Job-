@@ -1,71 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0"
->
-
-<title>Tasks Management</title>
-
-<link
-rel="stylesheet"
-href="../css/admin.css"
->
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#050B1F">
+  <title>Tasks • Admin</title>
+  <link rel="stylesheet" href="../css/admin.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-
 <body>
 
-<div class="admin-container">
+  <div id="app" class="loading-screen">
+    <div class="loader-content">
+      <div class="logo-glow">📋</div>
+      <h1>Tasks</h1>
+      <p class="loading-text">Loading...</p>
+    </div>
+  </div>
 
-<div class="admin-header">
-
-<h1>📋 Tasks Management</h1>
-
-<p>Manage, Delete & Control Tasks</p>
-
-</div>
-
-<div class="stats-grid">
-
-<div class="stat-card">
-
-<h3>Total Tasks</h3>
-
-<p id="totalTasks">0</p>
-
-</div>
-
-<div class="stat-card">
-
-<h3>Total Completed</h3>
-
-<p id="totalCompleted">0</p>
-
-</div>
-
-</div>
-
-<div id="tasksContainer">
-
-Loading Tasks...
-
-</div>
-
-</div>
-
-<script
-type="module"
-src="../js/admin-tasks.js"
-></script>
-
+  <script type="module" src="../js/admin-tasks.js"></script>
 </body>
-
 </html>

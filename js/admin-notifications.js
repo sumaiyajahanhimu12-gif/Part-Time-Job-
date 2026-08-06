@@ -1,16 +1,17 @@
-import { db } from "./firebase.js";
+import { db } from "../js/firebase.js";
 
 import {
   collection,
   addDoc,
   getDocs,
-  deleteDoc,
   doc,
+  deleteDoc,
   serverTimestamp,
   query,
   orderBy
-}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+loadNotices();
 
 const publishBtn =
 document.getElementById(
@@ -25,8 +26,6 @@ if (publishBtn) {
   );
 
 }
-
-loadNotices();
 
 async function publishNotice() {
 
@@ -50,8 +49,6 @@ async function publishNotice() {
 
   }
 
-  publishBtn.disabled = true;
-
   await addDoc(
     collection(
       db,
@@ -60,7 +57,6 @@ async function publishNotice() {
     {
       title,
       message,
-      status: "published",
       createdAt:
         serverTimestamp()
     }
@@ -93,53 +89,28 @@ async function loadNotices() {
 
   let html = "";
 
-  let totalNotices = 0;
-
   snap.forEach(item => {
-
-    totalNotices++;
 
     const data =
       item.data();
-
-    let dateText =
-      "Unknown Date";
-
-    if (data.createdAt) {
-
-      dateText =
-        data.createdAt
-        .toDate()
-        .toLocaleString();
-
-    }
 
     html += `
 
       <div class="section-card">
 
         <h3>
-          📢 ${data.title}
+        ${data.title}
         </h3>
 
         <p>
-          ${data.message}
+        ${data.message}
         </p>
 
-        <small>
-          🕒 ${dateText}
-        </small>
-
-        <br><br>
-
         <button
-          onclick="deleteNotice('${item.id}')"
-          style="
-            background:#dc2626;
-            color:white;
-          "
+        onclick="deleteNotice('${item.id}')"
+        style="background:#ef4444;"
         >
-          🗑 Delete
+        Delete
         </button>
 
       </div>
@@ -154,20 +125,9 @@ async function loadNotices() {
     html ||
     `
     <div class="section-card">
-
-      <h3>
-      📭 Empty
-      </h3>
-
-      <p>
-      No Notices Found
-      </p>
-
+      No Notice Found
     </div>
     `;
-
-  document.title =
-    `Notifications (${totalNotices})`;
 
 }
 
@@ -176,7 +136,7 @@ async function(id) {
 
   const ok =
     confirm(
-      "Delete This Notice?"
+      "Delete Notice?"
     );
 
   if (!ok)

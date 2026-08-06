@@ -3,117 +3,183 @@ import { db } from "../js/firebase.js";
 import {
   doc,
   getDoc,
-  setDoc
+  setDoc,
+  serverTimestamp
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 loadSettings();
 
-document
-.getElementById(
+const saveBtn =
+document.getElementById(
   "saveSettingsBtn"
-)
-.addEventListener(
-  "click",
-  saveSettings
 );
+
+if (saveBtn) {
+
+  saveBtn.addEventListener(
+    "click",
+    saveSettings
+  );
+
+}
 
 async function loadSettings() {
 
-  const settingsRef =
-    doc(
-      db,
-      "settings",
-      "system"
-    );
+  try {
 
-  const settingsSnap =
-    await getDoc(
-      settingsRef
-    );
+    const settingsRef =
+      doc(
+        db,
+        "settings",
+        "system"
+      );
 
-  if (
-    !settingsSnap.exists()
-  ) {
-    return;
+    const settingsSnap =
+      await getDoc(
+        settingsRef
+      );
+
+    if (
+      !settingsSnap.exists()
+    ) {
+
+      document.getElementById(
+        "withdrawEnabled"
+      ).value = "true";
+
+      document.getElementById(
+        "minWithdraw"
+      ).value = 50000;
+
+      document.getElementById(
+        "referralPercent"
+      ).value = 5;
+
+      document.getElementById(
+        "taskCooldown"
+      ).value = 24;
+
+      return;
+
+    }
+
+    const data =
+      settingsSnap.data();
+
+    document.getElementById(
+      "withdrawEnabled"
+    ).value =
+      String(
+        data.withdrawEnabled ?? true
+      );
+
+    document.getElementById(
+      "minWithdraw"
+    ).value =
+      data.minWithdraw || 50000;
+
+    document.getElementById(
+      "referralPercent"
+    ).value =
+      data.referralPercent || 5;
+
+    document.getElementById(
+      "taskCooldown"
+    ).value =
+      data.taskCooldown || 24;
+
   }
 
-  const data =
-    settingsSnap.data();
+  catch(error) {
 
-  document.getElementById(
-    "withdrawEnabled"
-  ).value =
-    String(
-      data.withdrawEnabled ?? true
+    console.error(error);
+
+    alert(
+      "Failed To Load Settings"
     );
 
-  document.getElementById(
-    "minWithdraw"
-  ).value =
-    data.minWithdraw || 50000;
-
-  document.getElementById(
-    "referralPercent"
-  ).value =
-    data.referralPercent || 5;
-
-  document.getElementById(
-    "taskCooldown"
-  ).value =
-    data.taskCooldown || 24;
+  }
 
 }
 
 async function saveSettings() {
 
-  const withdrawEnabled =
-    document.getElementById(
-      "withdrawEnabled"
-    ).value === "true";
+  try {
 
-  const minWithdraw =
-    Number(
+    const withdrawEnabled =
       document.getElementById(
-        "minWithdraw"
-      ).value
-    );
+        "withdrawEnabled"
+      ).value === "true";
 
-  const referralPercent =
-    Number(
-      document.getElementById(
-        "referralPercent"
-      ).value
-    );
+    const minWithdraw =
+      Number(
+        document.getElementById(
+          "minWithdraw"
+        ).value
+      );
 
-  const taskCooldown =
-    Number(
-      document.getElementById(
-        "taskCooldown"
-      ).value
-    );
+    const referralPercent =
+      Number(
+        document.getElementById(
+          "referralPercent"
+        ).value
+      );
 
-  await setDoc(
-    doc(
-      db,
-      "settings",
-      "system"
-    ),
-    {
-      withdrawEnabled,
-      minWithdraw,
-      referralPercent,
-      taskCooldown,
-      updatedAt:
-        new Date()
-    },
-    {
-      merge: true
+    const taskCooldown =
+      Number(
+        document.getElementById(
+          "taskCooldown"
+        ).value
+      );
+
+    if (
+      minWithdraw < 0 ||
+      referralPercent < 0 ||
+      taskCooldown < 0
+    ) {
+
+      alert(
+        "Invalid Settings Value"
+      );
+
+      return;
+
     }
-  );
 
-  alert(
-    "Settings Saved Successfully"
-  );
+    await setDoc(
+      doc(
+        db,
+        "settings",
+        "system"
+      ),
+      {
+        withdrawEnabled,
+        minWithdraw,
+        referralPercent,
+        taskCooldown,
+        updatedAt:
+          serverTimestamp()
+      },
+      {
+        merge: true
+      }
+    );
+
+    alert(
+      "Settings Saved Successfully"
+    );
+
+  }
+
+  catch(error) {
+
+    console.error(error);
+
+    alert(
+      "Failed To Save Settings"
+    );
+
+  }
 
 }

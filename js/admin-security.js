@@ -1,257 +1,242 @@
-import { db } from "../js/firebase.js";
-
+import { db } from "./firebase.js";
 import {
+  doc,
+  getDoc,
   collection,
   getDocs,
-  updateDoc,
-  doc
-}
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-loadSecurity();
+const tg = window.Telegram?.WebApp;
+
+if (!tg || !tg.initDataUnsafe?.user) {
+  document.getElementById("app").innerHTML = `
+    <div class="loader-content">
+      <h1>⛔ Access Denied</h1>
+      <p>Open inside Telegram</p>
+    </div>
+  `;
+  throw new Error("Telegram Required");
+}
+
+tg.ready();
+tg.expand();
+tg.setHeaderColor("#050B1F");
+tg.setBackgroundColor("#050B1F");
+
+const adminUser = tg.initDataUnsafe.user;
+
+async function checkAdmin() {
+  const snap = await getDoc(doc(db, "users", String(adminUser.id)));
+  if (!snap.exists() || snap.data().role !== "admin") {
+    document.getElementById("app").innerHTML = `
+      <div class="loader-content">
+        <h1>⛔ Access Denied</h1>
+        <p>You are not an admin</p>
+      </div>
+    `;
+    throw new Error("Not Admin");
+  }
+}
 
 async function loadSecurity() {
+  await checkAdmin();
 
-  const snap =
-    await getDocs(
-      collection(
-        db,
-        "users"
-      )
-    );
-
+  const snap = await getDocs(collection(db, "users"));
   const users = [];
+  snap.forEach(d => users.push({ id: d.id, ...d.data() }));
 
-  snap.forEach(item => {
+  // Maps for duplicates
+  const fbMap = {};
+  const deviceMap = {};
+  const paymentMap = {};
 
-    users.push({
-      id: item.id,
-      ...item.data()
-    });
-
+  users.forEach(u => {
+    if (u.facebookLink) {
+      fbMap[u.facebookLink] = (fbMap[u.facebookLink] || 0) + 1;
+    }
+    if (u.deviceHash) {
+      deviceMap[u.deviceHash] = (deviceMap[u.deviceHash] || 0) + 1;
+    }
+    if (u.paymentNumber) {
+      paymentMap[u.paymentNumber] = (paymentMap[u.paymentNumber] || 0) + 1;
+    }
   });
 
-  document.getElementById(
-    "totalUsers"
-  ).innerText =
-    users.length;
+  let duplicateFB = 0;
+  let duplicateDevice = 0;
+  let duplicatePayment = 0;
+  let suspiciousList = [];
 
-  let duplicateFacebook = 0;
-  let duplicateFingerprint = 0;
-  let suspiciousUsers = 0;
+  const seenFB = new Set();
+  const seenDevice = new Set();
+  const seenPayment = new Set();
 
-  const facebookMap = {};
-  const fingerprintMap = {};
+  users.forEach(u => {
+    const issues = [];
 
-  users.forEach(user => {
-
-    if (user.facebookLink) {
-
-      facebookMap[user.facebookLink] =
-      (facebookMap[user.facebookLink] || 0) + 1;
-
+    if (u.facebookLink && fbMap[u.facebookLink] > 1) {
+      issues.push("Duplicate Facebook");
+      if (!seenFB.has(u.facebookLink)) {
+        duplicateFB++;
+        seenFB.add(u.facebookLink);
+      }
     }
 
-    if (user.fingerprint) {
-
-      fingerprintMap[user.fingerprint] =
-      (fingerprintMap[user.fingerprint] || 0) + 1;
-
+    if (u.deviceHash && deviceMap[u.deviceHash] > 1) {
+      issues.push("Duplicate Device");
+      if (!seenDevice.has(u.deviceHash)) {
+        duplicateDevice++;
+        seenDevice.add(u.deviceHash);
+      }
     }
 
+    if (u.paymentNumber && paymentMap[u.paymentNumber] > 1) {
+      issues.push("Duplicate Payment Number");
+      if (!seenPayment.has(u.paymentNumber)) {
+        duplicatePayment++;
+        seenPayment.add(u.paymentNumber);
+      }
+    }
+
+    if (u.isBanned) {
+      issues.push("Already Banned");
+    }
+
+    if (issues.length > 0) {
+      suspiciousList.push({ ...u, issues });
+    }
   });
-
-  const countedFacebook =
-    new Set();
-
-  const countedFingerprint =
-    new Set();
 
   let html = "";
 
-  users.forEach(user => {
-
-    let suspicious = false;
-
-    const fbDuplicate =
-      user.facebookLink &&
-      facebookMap[user.facebookLink] > 1;
-
-    const fpDuplicate =
-      user.fingerprint &&
-      fingerprintMap[user.fingerprint] > 1;
-
-    if (fbDuplicate) {
-
-      suspicious = true;
-
-      countedFacebook.add(
-        user.facebookLink
-      );
-
-    }
-
-    if (fpDuplicate) {
-
-      suspicious = true;
-
-      countedFingerprint.add(
-        user.fingerprint
-      );
-
-    }
-
-    if (suspicious) {
-
-      suspiciousUsers++;
-
-      html += `
-
-      <div class="section-card">
-
-        <h3>
-          🚨 Suspicious Account
-        </h3>
-
-        <p>
-          🆔 Telegram:
-          ${user.telegramId || "-"}
-        </p>
-
-        <p>
-          👤 Username:
-          ${user.username || "-"}
-        </p>
-
-        <p>
-          📘 Facebook:
-          ${
-            user.facebookLink
-            ?
-            `<a href="${user.facebookLink}" target="_blank">${user.facebookLink}</a>`
-            :
-            "-"
+  suspiciousList.forEach(u => {
+    html += `
+      <div class="item-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+          <div>
+            <h3 style="margin:0 0 4px;">👤 ${u.firstName || "User"} ${u.lastName || ""}</h3>
+            <div style="font-size:12px;color:var(--muted);">@${u.username || "—"} • ${u.telegramId}</div>
+          </div>
+          ${u.isBanned
+            ? `<span class="badge badge-rejected">Banned</span>`
+            : `<span class="badge badge-pending">Suspicious</span>`
           }
-        </p>
+        </div>
 
-        <p>
-          📱 Fingerprint:
-          ${user.fingerprint || "-"}
-        </p>
+        <div style="font-size:12px;margin-bottom:10px;">
+          \( {u.issues.map(i => `<span class="badge badge-rejected" style="margin:2px 4px 2px 0;"> \){i}</span>`).join("")}
+        </div>
 
-        <p>
-          📌 Status:
-          ${user.status || "-"}
-        </p>
+        <div style="font-size:13px;line-height:1.6;color:var(--muted);margin-bottom:12px;">
+          \( {u.facebookLink ? `<div>📘 <a href=" \){u.facebookLink}" target="_blank" style="color:var(--success);">${u.facebookLink}</a></div>` : ""}
+          ${u.deviceHash ? `<div>📱 Device: ${u.deviceHash}</div>` : ""}
+          ${u.paymentNumber ? `<div>💳 ${u.paymentMethod || ""}: ${u.paymentNumber}</div>` : ""}
+          <div>💰 Coin: ${Number(u.coin || 0).toLocaleString()}</div>
+        </div>
 
-        <button
-          onclick="banUser('${user.id}')"
-          style="background:#dc2626;"
-        >
-          🚫 Ban User
-        </button>
-
+        ${!u.isBanned ? `
+          <button class="btn-danger" style="padding:11px;font-size:13px;"
+            onclick="window.banUser('${u.id}')">
+            🚫 Ban User
+          </button>
+        ` : `
+          <button class="btn-secondary" style="padding:11px;font-size:13px;"
+            onclick="window.unbanUser('${u.id}')">
+            Unban User
+          </button>
+        `}
       </div>
-
-      `;
-
-    }
-
+    `;
   });
 
-  duplicateFacebook =
-    countedFacebook.size;
+  document.getElementById("app").innerHTML = `
+    <div class="admin-page">
+      <div class="admin-header">
+        <h1>🛡 Security Center</h1>
+        <p>Fraud & multi-account detection</p>
+      </div>
 
-  duplicateFingerprint =
-    countedFingerprint.size;
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Users</div>
+          <div class="stat-value">${users.length}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Duplicate FB</div>
+          <div class="stat-value yellow">${duplicateFB}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Duplicate Device</div>
+          <div class="stat-value yellow">${duplicateDevice}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Duplicate Payment</div>
+          <div class="stat-value yellow">${duplicatePayment}</div>
+        </div>
+      </div>
 
-  document.getElementById(
-    "duplicateFacebook"
-  ).innerText =
-    duplicateFacebook;
+      <div class="section-title" style="margin:8px 0 14px;font-size:15px;font-weight:700;">
+        🚨 Suspicious Accounts (${suspiciousList.length})
+      </div>
 
-  document.getElementById(
-    "duplicateFingerprint"
-  ).innerText =
-    duplicateFingerprint;
+      <div id="securityList">
+        ${html || `
+          <div class="section-card" style="text-align:center;color:var(--muted);">
+            ✅ No suspicious accounts detected
+          </div>
+        `}
+      </div>
 
-  document.getElementById(
-    "suspiciousUsers"
-  ).innerText =
-    suspiciousUsers;
-
-  document.getElementById(
-    "securityContainer"
-  ).innerHTML =
-    html ||
-    `
-    <div class="section-card">
-
-      <h3>
-      ✅ No Suspicious Accounts Found
-      </h3>
-
+      <div style="margin-top:20px;">
+        <a href="dashboard.html" class="btn-secondary" style="display:block;text-align:center;text-decoration:none;">
+          ← Back to Dashboard
+        </a>
+      </div>
     </div>
-    `;
-
+  `;
 }
 
-window.banUser =
-async function(userId) {
+window.banUser = async function(uid) {
+  if (!confirm("Ban this user?\n\nTheir device hash will be flagged.")) return;
 
-  const ok =
-    confirm(
-      "Ban This User?"
-    );
+  try {
+    const userRef = doc(db, "users", uid);
+    const snap = await getDoc(userRef);
+    const data = snap.data() || {};
 
-  if (!ok)
-    return;
+    await updateDoc(userRef, {
+      isBanned: true,
+      status: "Banned",
+      banDeviceHash: data.deviceHash || ""
+    });
 
-  await updateDoc(
-    doc(
-      db,
-      "users",
-      userId
-    ),
-    {
-      status: "banned"
-    }
-  );
-
-  alert(
-    "User Banned Successfully"
-  );
-
-  location.reload();
-
+    tg.showAlert("User banned");
+    loadSecurity();
+  } catch (e) {
+    tg.showAlert("Error: " + e.message);
+  }
 };
 
-window.unbanUser =
-async function(userId) {
+window.unbanUser = async function(uid) {
+  if (!confirm("Unban this user?")) return;
 
-  const ok =
-    confirm(
-      "Unban This User?"
-    );
+  try {
+    const userRef = doc(db, "users", uid);
+    const snap = await getDoc(userRef);
+    const data = snap.data() || {};
 
-  if (!ok)
-    return;
+    await updateDoc(userRef, {
+      isBanned: false,
+      status: data.facebookLink ? "Active" : "Pending",
+      banDeviceHash: ""
+    });
 
-  await updateDoc(
-    doc(
-      db,
-      "users",
-      userId
-    ),
-    {
-      status: "active"
-    }
-  );
-
-  alert(
-    "User Unbanned Successfully"
-  );
-
-  location.reload();
-
+    tg.showAlert("User unbanned");
+    loadSecurity();
+  } catch (e) {
+    tg.showAlert("Error: " + e.message);
+  }
 };
+
+loadSecurity().catch(err => console.error(err));

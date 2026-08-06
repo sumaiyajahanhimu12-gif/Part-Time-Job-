@@ -14,9 +14,7 @@ import {
 loadNotices();
 
 const publishBtn =
-document.getElementById(
-  "publishNoticeBtn"
-);
+document.getElementById("publishNoticeBtn");
 
 if (publishBtn) {
 
@@ -30,104 +28,161 @@ if (publishBtn) {
 async function publishNotice() {
 
   const title =
-    document.getElementById(
-      "noticeTitle"
-    ).value.trim();
+    document.getElementById("noticeTitle")
+    ?.value.trim();
 
   const message =
-    document.getElementById(
-      "noticeMessage"
-    ).value.trim();
+    document.getElementById("noticeMessage")
+    ?.value.trim();
 
   if (!title || !message) {
 
-    alert(
-      "Title & Message Required"
-    );
-
+    alert("Title & Message Required");
     return;
 
   }
 
-  await addDoc(
-    collection(
-      db,
-      "notifications"
-    ),
-    {
-      title,
-      message,
-      createdAt:
-        serverTimestamp()
-    }
-  );
+  publishBtn.disabled = true;
 
-  alert(
-    "Notice Published Successfully"
-  );
+  try {
 
-  location.reload();
+    await addDoc(
+      collection(db, "notifications"),
+      {
+        title,
+        message,
+        status: "published",
+        createdAt: serverTimestamp()
+      }
+    );
+
+    alert("Notice Published Successfully");
+
+    document.getElementById(
+      "noticeTitle"
+    ).value = "";
+
+    document.getElementById(
+      "noticeMessage"
+    ).value = "";
+
+    await loadNotices();
+
+  }
+
+  catch(error) {
+
+    console.error(error);
+
+    alert(
+      "Failed To Publish Notice"
+    );
+
+  }
+
+  finally {
+
+    publishBtn.disabled = false;
+
+  }
 
 }
 
 async function loadNotices() {
 
-  const q =
-    query(
-      collection(
-        db,
-        "notifications"
-      ),
-      orderBy(
-        "createdAt",
-        "desc"
-      )
-    );
+  try {
 
-  const snap =
-    await getDocs(q);
+    const q =
+      query(
+        collection(
+          db,
+          "notifications"
+        ),
+        orderBy(
+          "createdAt",
+          "desc"
+        )
+      );
 
-  let html = "";
+    const snap =
+      await getDocs(q);
 
-  snap.forEach(item => {
+    let html = "";
 
-    const data =
-      item.data();
+    snap.forEach(item => {
 
-    html += `
+      const data =
+        item.data();
+
+      let dateText =
+        "Unknown Date";
+
+      if (data.createdAt) {
+
+        dateText =
+          data.createdAt
+          .toDate()
+          .toLocaleString();
+
+      }
+
+      html += `
 
       <div class="section-card">
 
         <h3>
-        ${data.title}
+        📢 ${data.title || "Notice"}
         </h3>
 
         <p>
-        ${data.message}
+        ${data.message || ""}
         </p>
+
+        <small>
+        🕒 ${dateText}
+        </small>
+
+        <br><br>
 
         <button
         onclick="deleteNotice('${item.id}')"
         style="background:#ef4444;"
         >
-        Delete
+        🗑 Delete
         </button>
 
       </div>
 
-    `;
+      `;
 
-  });
+    });
 
-  document.getElementById(
-    "noticeList"
-  ).innerHTML =
-    html ||
-    `
-    <div class="section-card">
-      No Notice Found
-    </div>
-    `;
+    document.getElementById(
+      "noticeList"
+    ).innerHTML =
+      html ||
+      `
+      <div class="section-card">
+        No Notice Found
+      </div>
+      `;
+
+  }
+
+  catch(error) {
+
+    console.error(error);
+
+    document.getElementById(
+      "noticeList"
+    ).innerHTML =
+      `
+      <div class="section-card">
+        Failed To Load Notices
+      </div>
+      `;
+
+  }
 
 }
 
@@ -142,14 +197,28 @@ async function(id) {
   if (!ok)
     return;
 
-  await deleteDoc(
-    doc(
-      db,
-      "notifications",
-      id
-    )
-  );
+  try {
 
-  location.reload();
+    await deleteDoc(
+      doc(
+        db,
+        "notifications",
+        id
+      )
+    );
+
+    await loadNotices();
+
+  }
+
+  catch(error) {
+
+    console.error(error);
+
+    alert(
+      "Failed To Delete Notice"
+    );
+
+  }
 
 };

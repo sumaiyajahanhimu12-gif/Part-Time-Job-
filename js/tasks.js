@@ -4,7 +4,6 @@ import {
   collection,
   getDocs,
   doc,
-  getDoc,
   updateDoc,
   increment,
   addDoc,
@@ -42,10 +41,18 @@ async function loadTasks() {
 
   for (const taskDoc of snap.docs) {
 
-    const data = taskDoc.data();
+    const data =
+      taskDoc.data();
 
     if (data.status !== "published")
       continue;
+
+    if (
+      data.limit > 0 &&
+      (data.completedCount || 0) >= data.limit
+    ) {
+      continue;
+    }
 
     if (data.taskType === "daily")
       daily++;
@@ -71,6 +78,8 @@ async function loadTasks() {
 
         <p>⏱ ${data.timer || 20} Seconds</p>
 
+        <p>📊 ${data.completedCount || 0}/${data.limit || "∞"}</p>
+
         <button
           onclick="window.open('${data.link}','_blank')"
         >
@@ -85,6 +94,7 @@ async function loadTasks() {
           </button>`
           :
           `<button
+             id="claim-${taskDoc.id}"
              onclick="completeTask(
                '${taskDoc.id}',
                ${data.coin},
@@ -102,7 +112,9 @@ async function loadTasks() {
     allHtml += card;
 
     if (data.trending) {
+
       trendingHtml += card;
+
     }
 
   }
@@ -114,7 +126,8 @@ async function loadTasks() {
   document.getElementById(
     "trendingTasks"
   ).innerHTML =
-    trendingHtml || "No Trending Tasks";
+    trendingHtml ||
+    "No Trending Tasks";
 
   document.getElementById(
     "dailyCount"
@@ -138,7 +151,8 @@ async function isTaskCompleted(taskId) {
     where("taskId", "==", taskId)
   );
 
-  const snap = await getDocs(q);
+  const snap =
+    await getDocs(q);
 
   return !snap.empty;
 
@@ -147,29 +161,40 @@ async function isTaskCompleted(taskId) {
 window.completeTask =
 async function(taskId, coin, timer) {
 
-  const confirmed =
-    confirm(
-      `Wait ${timer} seconds to receive reward.`
+  const already =
+    await isTaskCompleted(taskId);
+
+  if (already) {
+
+    alert(
+      "Task Already Completed"
     );
 
-  if (!confirmed)
     return;
 
-  let sec = timer;
+  }
 
-  const btns =
-    document.querySelectorAll("button");
+  const btn =
+    document.getElementById(
+      `claim-${taskId}`
+    );
 
-  btns.forEach(btn => {
-    btn.disabled = true;
-  });
+  btn.disabled = true;
+
+  let seconds = timer;
+
+  btn.innerText =
+    `Wait ${seconds}s`;
 
   const interval =
     setInterval(() => {
 
-      sec--;
+      seconds--;
 
-      if (sec <= 0) {
+      btn.innerText =
+        `Wait ${seconds}s`;
+
+      if (seconds <= 0) {
 
         clearInterval(interval);
 
@@ -180,11 +205,18 @@ async function(taskId, coin, timer) {
   setTimeout(async () => {
 
     await addDoc(
-      collection(db, "taskClaims"),
+      collection(
+        db,
+        "taskClaims"
+      ),
       {
-        userId: String(user.id),
+        userId:
+          String(user.id),
+
         taskId,
+
         coin,
+
         createdAt:
           serverTimestamp()
       }
@@ -197,12 +229,20 @@ async function(taskId, coin, timer) {
         String(user.id)
       ),
       {
-        coin: increment(coin)
+        coin:
+          increment(coin),
+
+        totalEarned:
+          increment(coin)
       }
     );
 
     await updateDoc(
-      doc(db, "tasks", taskId),
+      doc(
+        db,
+        "tasks",
+        taskId
+      ),
       {
         completedCount:
           increment(1)

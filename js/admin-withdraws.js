@@ -4,7 +4,9 @@ import {
   collection,
   getDocs,
   doc,
-  updateDoc
+  updateDoc,
+  getDoc,
+  increment
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -41,52 +43,64 @@ async function loadWithdraws() {
 
     <div class="section-card">
 
-    <h3>
-    💰 ${data.coin} Coins
-    </h3>
+      <h3>
+      💰 ${data.coin || 0} Coins
+      </h3>
 
-    <p>
-    Telegram ID:
-    ${data.telegramId}
-    </p>
+      <p>
+      🆔 Telegram ID:
+      ${data.userId || data.telegramId || "-"}
+      </p>
 
-    <p>
-    Payment Number:
-    ${data.paymentNumber}
-    </p>
+      <p>
+      📱 Payment Number:
+      ${data.paymentNumber || "-"}
+      </p>
 
-    <p>
-    Status:
-    ${data.status}
-    </p>
+      <p>
+      📌 Status:
+      ${data.status || "pending"}
+      </p>
 
-    <p>
+      <p>
 
-    <a
-    href="${data.facebookLink || "#"}"
-    target="_blank"
-    >
+      <a
+      href="${data.facebookLink || "#"}"
+      target="_blank"
+      >
 
-    🔗 Facebook Profile
+      🔗 Facebook Profile
 
-    </a>
+      </a>
 
-    </p>
+      </p>
 
-    <button
-    onclick="approveWithdraw('${item.id}')"
-    >
-    ✅ Approve
-    </button>
+      ${
+        data.status === "pending"
+        ?
+        `
+        <button
+        onclick="approveWithdraw('${item.id}')"
+        >
+        ✅ Approve
+        </button>
 
-    <br><br>
+        <br><br>
 
-    <button
-    onclick="rejectWithdraw('${item.id}')"
-    style="background:#ef4444;"
-    >
-    ❌ Reject
-    </button>
+        <button
+        onclick="rejectWithdraw('${item.id}')"
+        style="background:#ef4444;"
+        >
+        ❌ Reject
+        </button>
+        `
+        :
+        `
+        <button disabled>
+        ${data.status.toUpperCase()}
+        </button>
+        `
+      }
 
     </div>
 
@@ -96,7 +110,13 @@ async function loadWithdraws() {
 
   document.getElementById(
     "withdrawsContainer"
-  ).innerHTML = html;
+  ).innerHTML =
+    html ||
+    `
+    <div class="section-card">
+      No Withdraw Requests Found
+    </div>
+    `;
 
   document.getElementById(
     "pendingCount"
@@ -115,14 +135,71 @@ async function loadWithdraws() {
 window.approveWithdraw =
 async function(id) {
 
+  const ok =
+    confirm(
+      "Approve Withdraw?"
+    );
+
+  if (!ok)
+    return;
+
+  const withdrawRef =
+    doc(
+      db,
+      "withdraws",
+      id
+    );
+
+  const withdrawSnap =
+    await getDoc(
+      withdrawRef
+    );
+
+  if (!withdrawSnap.exists())
+    return;
+
+  const withdrawData =
+    withdrawSnap.data();
+
   await updateDoc(
-    doc(db, "withdraws", id),
+    withdrawRef,
     {
       status: "approved"
     }
   );
 
-  alert("Withdraw Approved");
+  if (withdrawData.userId) {
+
+    try {
+
+      await updateDoc(
+        doc(
+          db,
+          "users",
+          withdrawData.userId
+        ),
+        {
+          coin: 0,
+          totalWithdraw:
+            increment(
+              withdrawData.coin || 0
+            )
+        }
+      );
+
+    }
+
+    catch(error) {
+
+      console.log(error);
+
+    }
+
+  }
+
+  alert(
+    "Withdraw Approved"
+  );
 
   location.reload();
 
@@ -131,14 +208,28 @@ async function(id) {
 window.rejectWithdraw =
 async function(id) {
 
+  const ok =
+    confirm(
+      "Reject Withdraw?"
+    );
+
+  if (!ok)
+    return;
+
   await updateDoc(
-    doc(db, "withdraws", id),
+    doc(
+      db,
+      "withdraws",
+      id
+    ),
     {
       status: "rejected"
     }
   );
 
-  alert("Withdraw Rejected");
+  alert(
+    "Withdraw Rejected"
+  );
 
   location.reload();
 

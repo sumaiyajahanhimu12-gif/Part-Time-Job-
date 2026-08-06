@@ -6,10 +6,7 @@ import {
   updateDoc,
   serverTimestamp,
   collection,
-  addDoc,
-  query,
-  where,
-  getDocs
+  addDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const tg = window.Telegram?.WebApp;
@@ -34,13 +31,13 @@ const user = tg.initDataUnsafe.user;
 const startParam = tg.initDataUnsafe.start_param || null;
 
 function generateDeviceHash() {
-  const raw = `\( {navigator.userAgent}| \){screen.width}x\( {screen.height}| \){navigator.language}|${navigator.platform}`;
+  const raw = `\( {navigator.userAgent}| \){screen.width}x\( {screen.height}| \){navigator.language}|\( {navigator.platform}| \){navigator.hardwareConcurrency || 0}`;
   let hash = 0;
   for (let i = 0; i < raw.length; i++) {
     hash = ((hash << 5) - hash) + raw.charCodeAt(i);
     hash |= 0;
   }
-  return "dh_" + Math.abs(hash).toString(36);
+  return "dh_" + Math.abs(hash).toString(36) + "_" + String(user.id).slice(-4);
 }
 
 async function ensureSettings() {
@@ -64,6 +61,9 @@ async function createOrUpdateUser() {
   const deviceHash = generateDeviceHash();
 
   if (!userSnap.exists()) {
+    // Check if this device is already banned
+    // (simple check - later can be improved)
+
     await setDoc(userRef, {
       telegramId: user.id,
       username: user.username || "",
@@ -90,20 +90,20 @@ async function createOrUpdateUser() {
 
     // Handle referral
     if (startParam && startParam !== String(user.id)) {
-      const pendingRef = collection(db, "pendingReferrals");
-      await addDoc(pendingRef, {
-        referrerId: startParam,
+      await addDoc(collection(db, "pendingReferrals"), {
+        referrerId: String(startParam),
         newUserId: String(user.id),
         status: "pending",
         createdAt: serverTimestamp()
       });
     }
   } else {
-    // Update lastActive + basic info
+    // Always update deviceHash + lastActive
     await updateDoc(userRef, {
       lastActive: serverTimestamp(),
-      username: user.username || userSnap.data().username,
-      firstName: user.first_name || userSnap.data().firstName,
+      deviceHash: deviceHash,
+      username: user.username || userSnap.data().username || "",
+      firstName: user.first_name || userSnap.data().firstName || "",
       photoUrl: user.photo_url || userSnap.data().photoUrl || ""
     });
   }
@@ -115,34 +115,35 @@ async function loadDashboard() {
 
   if (!userSnap.exists()) {
     document.getElementById("app").innerHTML = `
-      <div class="loader-content">
-        <h2>User not found</h2>
-      </div>
+      <div class="loader-content"><h2>User not found</h2></div>
     `;
     return;
   }
 
   const data = userSnap.data();
 
-  let statusBadge = "";
-  if (data.status === "Pending") {
-    statusBadge = `<span class="badge badge-pending">Pending</span>`;
-  } else if (data.status === "Active") {
-    statusBadge = `<span class="badge badge-active">Active</span>`;
-  } else if (data.status === "Inactive") {
-    statusBadge = `<span class="badge badge-inactive">Inactive</span>`;
+  // If banned → block
+  if (data.isBanned) {
+    document.getElementById("app").innerHTML = `
+      <div class="loader-content">
+        <h1>🚫 Account Banned</h1>
+        <p class="error-text">Your account has been suspended.</p>
+      </div>
+    `;
+    return;
   }
+
+  let statusBadge = "";
+  if (data.status === "Pending") statusBadge = `<span class="badge badge-pending">Pending</span>`;
+  else if (data.status === "Active") statusBadge = `<span class="badge badge-active">Active</span>`;
+  else statusBadge = `<span class="badge badge-inactive">${data.status || "Inactive"}</span>`;
 
   let adminCard = "";
   if (data.role === "admin") {
     adminCard = `
       <div class="card admin-card">
-        <div class="card-header">
-          <span>🛠 Admin Panel</span>
-        </div>
-        <button class="btn-primary" onclick="location.href='admin/dashboard.html'">
-          Open Dashboard
-        </button>
+        <div class="card-header">🛠 Admin Panel</div>
+        <button class="btn-primary" onclick="location.href='admin/dashboard.html'">Open Dashboard</button>
       </div>
     `;
   }
@@ -151,13 +152,9 @@ async function loadDashboard() {
   if (data.status === "Pending") {
     facebookNotice = `
       <div class="card notice-card">
-        <div class="card-header">
-          <span>⚠️ Account Activation Required</span>
-        </div>
-        <p>Submit your Facebook profile link to activate your account and start earning.</p>
-        <button class="btn-primary" onclick="location.href='profile.html'">
-          Go to Profile
-        </button>
+        <div class="card-header">⚠️ Account Activation Required</div>
+        <p>You must submit your Facebook profile link to activate your account and unlock all features.</p>
+        <button class="btn-primary" onclick="location.href='profile.html'">Go to Profile & Activate</button>
       </div>
     `;
   }
@@ -167,7 +164,8 @@ async function loadDashboard() {
       <div class="hero-card">
         <div class="hero-top">
           <div class="avatar-wrap">
-            <img src="${data.photoUrl || 'images/default-avatar.png'}" alt="avatar" class="avatar" onerror="this.src='images/default-avatar.png'">
+            <img src="${data.photoUrl || 'images/default-avatar.png'}" class="avatar" alt="avatar"
+              onerror="this.src='images/default-avatar.png'">
           </div>
           <div class="hero-info">
             <h2>${data.firstName || "User"}</h2>
@@ -208,28 +206,15 @@ async function loadDashboard() {
       ${adminCard}
 
       <div class="quick-actions">
-        <a href="tasks.html" class="action-btn">
-          <span>📋</span>
-          <span>Tasks</span>
-        </a>
-        <a href="refer.html" class="action-btn">
-          <span>👥</span>
-          <span>Invite</span>
-        </a>
-        <a href="withdraw.html" class="action-btn">
-          <span>💰</span>
-          <span>Withdraw</span>
-        </a>
-        <a href="notifications.html" class="action-btn">
-          <span>🔔</span>
-          <span>Alerts</span>
-        </a>
+        <a href="tasks.html" class="action-btn"><span>📋</span><span>Tasks</span></a>
+        <a href="refer.html" class="action-btn"><span>👥</span><span>Invite</span></a>
+        <a href="withdraw.html" class="action-btn"><span>💰</span><span>Withdraw</span></a>
+        <a href="notifications.html" class="action-btn"><span>🔔</span><span>Alerts</span></a>
       </div>
     </div>
   `;
 }
 
-// Main
 (async () => {
   try {
     await ensureSettings();

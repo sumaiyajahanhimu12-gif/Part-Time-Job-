@@ -29,7 +29,7 @@ href="../css/admin.css"
 
 <h1>🛠 Admin Dashboard</h1>
 
-<p>Part Time Job Management</p>
+<p>Part Time Job Management System</p>
 
 </div>
 
@@ -46,12 +46,12 @@ href="../css/admin.css"
 </div>
 
 <div class="stat-card">
-<h3>Tasks</h3>
+<h3>Total Tasks</h3>
 <p id="totalTasks">0</p>
 </div>
 
 <div class="stat-card">
-<h3>Withdraws</h3>
+<h3>Pending Withdraws</h3>
 <p id="pendingWithdraws">0</p>
 </div>
 
@@ -59,7 +59,7 @@ href="../css/admin.css"
 
 <div class="section-card">
 
-<h2>📋 Create Task</h2>
+<h2>📋 Create New Task</h2>
 
 <input
 id="taskName"
@@ -79,33 +79,33 @@ placeholder="Coin Reward"
 
 <input
 id="taskCode"
-placeholder="Code (Optional)"
+placeholder="Verification Code (Optional)"
 >
 
 <input
 id="taskTimer"
 type="number"
-placeholder="Timer Seconds"
+placeholder="Task Timer (Seconds)"
 >
 
 <input
 id="taskLimit"
 type="number"
-placeholder="Limit (0 = Unlimited)"
+placeholder="Task Limit (0 = Unlimited)"
 >
 
 <select id="taskType">
 
 <option value="daily">
-Daily
+Daily Task
 </option>
 
 <option value="weekly">
-Weekly
+Weekly Task
 </option>
 
 <option value="permanent">
-Permanent
+Permanent Task
 </option>
 
 </select>
@@ -148,6 +148,14 @@ Trending
 👥 Referrals
 </a>
 
+<a href="notifications.html">
+📢 Notices
+</a>
+
+<a href="security.html">
+🛡 Security
+</a>
+
 <a href="settings.html">
 ⚙ Settings
 </a>
@@ -163,4 +171,4 @@ src="../js/admin.js"
 
 </body>
 
-  </html>
+</html>

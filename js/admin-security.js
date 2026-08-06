@@ -61,6 +61,12 @@ async function loadSecurity() {
 
   });
 
+  const countedFacebook =
+    new Set();
+
+  const countedFingerprint =
+    new Set();
+
   let html = "";
 
   users.forEach(user => {
@@ -77,15 +83,21 @@ async function loadSecurity() {
 
     if (fbDuplicate) {
 
-      duplicateFacebook++;
       suspicious = true;
+
+      countedFacebook.add(
+        user.facebookLink
+      );
 
     }
 
     if (fpDuplicate) {
 
-      duplicateFingerprint++;
       suspicious = true;
+
+      countedFingerprint.add(
+        user.fingerprint
+      );
 
     }
 
@@ -102,22 +114,33 @@ async function loadSecurity() {
         </h3>
 
         <p>
-          Telegram ID:
+          🆔 Telegram:
           ${user.telegramId || "-"}
         </p>
 
         <p>
-          Username:
+          👤 Username:
           ${user.username || "-"}
         </p>
 
         <p>
-          Facebook:
-          ${user.facebookLink || "-"}
+          📘 Facebook:
+          ${
+            user.facebookLink
+            ?
+            `<a href="${user.facebookLink}" target="_blank">${user.facebookLink}</a>`
+            :
+            "-"
+          }
         </p>
 
         <p>
-          Status:
+          📱 Fingerprint:
+          ${user.fingerprint || "-"}
+        </p>
+
+        <p>
+          📌 Status:
           ${user.status || "-"}
         </p>
 
@@ -135,6 +158,12 @@ async function loadSecurity() {
     }
 
   });
+
+  duplicateFacebook =
+    countedFacebook.size;
+
+  duplicateFingerprint =
+    countedFingerprint.size;
 
   document.getElementById(
     "duplicateFacebook"
@@ -156,9 +185,13 @@ async function loadSecurity() {
   ).innerHTML =
     html ||
     `
-      <div class="section-card">
-        <h3>✅ No Suspicious Accounts Found</h3>
-      </div>
+    <div class="section-card">
+
+      <h3>
+      ✅ No Suspicious Accounts Found
+      </h3>
+
+    </div>
     `;
 
 }
@@ -187,6 +220,36 @@ async function(userId) {
 
   alert(
     "User Banned Successfully"
+  );
+
+  location.reload();
+
+};
+
+window.unbanUser =
+async function(userId) {
+
+  const ok =
+    confirm(
+      "Unban This User?"
+    );
+
+  if (!ok)
+    return;
+
+  await updateDoc(
+    doc(
+      db,
+      "users",
+      userId
+    ),
+    {
+      status: "active"
+    }
+  );
+
+  alert(
+    "User Unbanned Successfully"
   );
 
   location.reload();

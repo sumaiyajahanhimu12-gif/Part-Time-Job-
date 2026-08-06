@@ -1,67 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0"
->
-
-<title>Notifications</title>
-
-<link
-rel="stylesheet"
-href="css/style.css"
->
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#050B1F">
+  <title>Notifications • Part Time Job</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-
 <body>
 
-<div class="dashboard">
+  <div id="app" class="loading-screen">
+    <div class="loader-content">
+      <div class="logo-glow">🔔</div>
+      <h1>Notifications</h1>
+      <p class="loading-text">Loading...</p>
+    </div>
+  </div>
 
-<div class="top-card">
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Home</span>
+    </a>
+    <a href="tasks.html" class="nav-item">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">Tasks</span>
+    </a>
+    <a href="refer.html" class="nav-item">
+      <span class="nav-icon">👥</span>
+      <span class="nav-label">Refer</span>
+    </a>
+    <a href="withdraw.html" class="nav-item">
+      <span class="nav-icon">💰</span>
+      <span class="nav-label">Withdraw</span>
+    </a>
+    <a href="profile.html" class="nav-item">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">Profile</span>
+    </a>
+  </nav>
 
-<h1>🔔 Notifications</h1>
-
-<p>Announcements & Updates</p>
-
-</div>
-
-<div id="notificationsContainer">
-
-<div class="card">
-Loading Notifications...
-</div>
-
-</div>
-
-</div>
-
-<nav class="bottom-nav">
-
-<a href="index.html">🏠</a>
-
-<a href="tasks.html">📋</a>
-
-<a href="refer.html">👥</a>
-
-<a href="withdraw.html">💰</a>
-
-<a href="profile.html">👤</a>
-
-</nav>
-
-<script
-type="module"
-src="js/notifications.js"
-></script>
-
+  <script type="module" src="js/notifications.js"></script>
 </body>
-
 </html>

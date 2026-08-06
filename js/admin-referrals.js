@@ -4,7 +4,9 @@ import {
   collection,
   getDocs,
   updateDoc,
-  doc
+  doc,
+  getDoc,
+  increment
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -50,22 +52,26 @@ async function loadReferrals() {
       <div class="section-card">
 
         <h3>
-          Referral
+          👥 Referral
         </h3>
 
         <p>
-          👤 Referrer:
+          🔹 Referrer:
           ${data.referrerId}
         </p>
 
         <p>
-          👥 Referred:
+          🔹 Referred:
           ${data.referredId}
         </p>
 
         <p>
           📌 Status:
-          ${data.status}
+          ${
+            data.status === "active"
+            ? "✅ Active"
+            : "⏳ Pending"
+          }
         </p>
 
         ${
@@ -79,7 +85,13 @@ async function loadReferrals() {
           </button>
           `
           :
-          ""
+          `
+          <button
+            disabled
+          >
+            Approved
+          </button>
+          `
         }
 
       </div>
@@ -109,7 +121,15 @@ async function loadReferrals() {
     html ||
     `
     <div class="section-card">
+
+      <h3>
+      Empty
+      </h3>
+
+      <p>
       No Referrals Found
+      </p>
+
     </div>
     `;
 
@@ -120,21 +140,67 @@ async function(id) {
 
   const ok =
     confirm(
-      "Approve Referral?"
+      "Approve This Referral?"
     );
 
   if (!ok)
     return;
 
-  await updateDoc(
+  const referralRef =
     doc(
       db,
       "pendingReferrals",
       id
-    ),
+    );
+
+  const referralSnap =
+    await getDoc(
+      referralRef
+    );
+
+  if (!referralSnap.exists())
+    return;
+
+  const referralData =
+    referralSnap.data();
+
+  await updateDoc(
+    referralRef,
     {
       status: "active"
     }
+  );
+
+  const referrerRef =
+    doc(
+      db,
+      "users",
+      referralData.referrerId
+    );
+
+  try {
+
+    await updateDoc(
+      referrerRef,
+      {
+        referrals:
+          increment(1),
+
+        activeReferrals:
+          increment(1)
+      }
+    );
+
+  }
+
+  catch(error) {
+
+    console.log(error);
+
+  }
+
+  alert(
+    "Referral Approved Successfully"
   );
 
   location.reload();

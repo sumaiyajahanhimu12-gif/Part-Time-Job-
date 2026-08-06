@@ -1,72 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0"
->
-
-<title>Users Management</title>
-
-<link
-rel="stylesheet"
-href="../css/admin.css"
->
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#050B1F">
+  <title>Users • Admin</title>
+  <link rel="stylesheet" href="../css/admin.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-
 <body>
 
-<div class="admin-container">
+  <div id="app" class="loading-screen">
+    <div class="loader-content">
+      <div class="logo-glow">👥</div>
+      <h1>Users</h1>
+      <p class="loading-text">Loading...</p>
+    </div>
+  </div>
 
-<div class="admin-header">
-
-<h1>👥 Users Management</h1>
-
-<p>Manage All Registered Users</p>
-
-</div>
-
-<div class="stats-grid">
-
-<div class="stat-card">
-
-<h3>Total Users</h3>
-
-<p id="totalUsers">0</p>
-
-</div>
-
-</div>
-
-<div class="section-card">
-
-<input
-id="searchUser"
-placeholder="Search Telegram ID / Username"
->
-
-</div>
-
-<div id="usersContainer">
-
-Loading Users...
-
-</div>
-
-</div>
-
-<script
-type="module"
-src="../js/admin-users.js"
-></script>
-
+  <script type="module" src="../js/admin-users.js"></script>
 </body>
-
 </html>

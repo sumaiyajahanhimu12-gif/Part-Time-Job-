@@ -12,45 +12,62 @@ async function loadUsers() {
 
   const snap =
     await getDocs(
-      collection(db,"users")
+      collection(db, "users")
     );
 
   let html = "";
+
+  let totalUsers = 0;
 
   snap.forEach(user => {
 
     const data =
       user.data();
 
+    totalUsers++;
+
     html += `
 
-    <div class="task-card">
+    <div class="section-card">
 
-    <h3>
-    ${data.firstName || ""}
-    </h3>
+      <h3>
+      👤 ${data.firstName || "User"}
+      </h3>
 
-    <p>
-    Telegram ID:
-    ${data.telegramId}
-    </p>
+      <p>
+      Telegram ID:
+      ${data.telegramId || "-"}
+      </p>
 
-    <p>
-    Coins:
-    ${data.coin || 0}
-    </p>
+      <p>
+      Coins:
+      ${data.coin || 0}
+      </p>
 
-    <p>
-    Status:
-    ${data.status}
-    </p>
+      <p>
+      Status:
+      ${data.status || "inactive"}
+      </p>
 
-    <a
-    href="${data.facebookLink || "#"}"
-    target="_blank"
-    >
-    Facebook Profile
-    </a>
+      <p>
+      Username:
+      ${data.username ? "@" + data.username : "-"}
+      </p>
+
+      ${
+        data.facebookLink
+        ?
+        `
+        <a
+          href="${data.facebookLink}"
+          target="_blank"
+        >
+          🔗 Facebook Profile
+        </a>
+        `
+        :
+        "<p>Facebook Not Added</p>"
+      }
 
     </div>
 
@@ -60,6 +77,24 @@ async function loadUsers() {
 
   document.getElementById(
     "usersContainer"
-  ).innerHTML = html;
+  ).innerHTML =
+    html ||
+    `
+    <div class="section-card">
+      No Users Found
+    </div>
+    `;
 
-}
+  const totalUsersElement =
+    document.getElementById(
+      "totalUsers"
+    );
+
+  if (totalUsersElement) {
+
+    totalUsersElement.innerText =
+      totalUsers;
+
+  }
+
+               }

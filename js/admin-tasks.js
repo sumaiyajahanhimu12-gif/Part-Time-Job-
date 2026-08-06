@@ -2,10 +2,7 @@ import { db } from "./firebase.js";
 
 import {
   collection,
-  getDocs,
-  deleteDoc,
-  doc,
-  updateDoc
+  getDocs
 }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -15,10 +12,7 @@ async function loadTasks() {
 
   const snap =
     await getDocs(
-      collection(
-        db,
-        "tasks"
-      )
+      collection(db, "tasks")
     );
 
   let html = "";
@@ -28,13 +22,13 @@ async function loadTasks() {
 
   snap.forEach(task => {
 
-    totalTasks++;
-
     const data =
       task.data();
 
+    totalTasks++;
+
     totalCompleted +=
-      data.completedCount || 0;
+      (data.completedCount || 0);
 
     html += `
 
@@ -56,42 +50,14 @@ async function loadTasks() {
       </p>
 
       <p>
-      ⏱ Timer:
-      ${data.timer || 0}
-      Seconds
-      </p>
-
-      <p>
-      🎯 Limit:
-      ${data.limit || 0}
-      </p>
-
-      <p>
       📊 Completed:
       ${data.completedCount || 0}
       </p>
 
       <p>
       📌 Status:
-      ${data.status || "published"}
+      ${data.status || "-"}
       </p>
-
-      <button
-      onclick="toggleTrending('${task.id}', ${data.trending ? false : true})"
-      >
-
-      ${data.trending ? "🔥 Remove Trending" : "🔥 Make Trending"}
-
-      </button>
-
-      <br><br>
-
-      <button
-      onclick="deleteTask('${task.id}')"
-      style="background:#dc2626;"
-      >
-      🗑 Delete Task
-      </button>
 
     </div>
 
@@ -109,49 +75,14 @@ async function loadTasks() {
     </div>
     `;
 
+  document.getElementById(
+    "totalTasks"
+  ).innerText =
+    totalTasks;
+
+  document.getElementById(
+    "totalCompleted"
+  ).innerText =
+    totalCompleted;
+
 }
-
-window.deleteTask =
-async function(taskId) {
-
-  const ok =
-    confirm(
-      "Delete This Task?"
-    );
-
-  if (!ok)
-    return;
-
-  await deleteDoc(
-    doc(
-      db,
-      "tasks",
-      taskId
-    )
-  );
-
-  alert(
-    "Task Deleted"
-  );
-
-  location.reload();
-
-};
-
-window.toggleTrending =
-async function(taskId, value) {
-
-  await updateDoc(
-    doc(
-      db,
-      "tasks",
-      taskId
-    ),
-    {
-      trending: value
-    }
-  );
-
-  location.reload();
-
-};

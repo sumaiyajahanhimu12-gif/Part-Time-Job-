@@ -1,174 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0"
->
-
-<title>Admin Dashboard</title>
-
-<link
-rel="stylesheet"
-href="../css/admin.css"
->
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#050B1F">
+  <title>Admin Dashboard • Part Time Job</title>
+  <link rel="stylesheet" href="../css/admin.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-
 <body>
 
-<div class="admin-container">
+  <div id="app" class="loading-screen">
+    <div class="loader-content">
+      <div class="logo-glow">🛠</div>
+      <h1>Admin Panel</h1>
+      <p class="loading-text">Checking access...</p>
+    </div>
+  </div>
 
-<div class="admin-header">
-
-<h1>🛠 Admin Dashboard</h1>
-
-<p>Part Time Job Management System</p>
-
-</div>
-
-<div class="stats-grid">
-
-<div class="stat-card">
-<h3>Total Users</h3>
-<p id="totalUsers">0</p>
-</div>
-
-<div class="stat-card">
-<h3>Active Users</h3>
-<p id="activeUsers">0</p>
-</div>
-
-<div class="stat-card">
-<h3>Total Tasks</h3>
-<p id="totalTasks">0</p>
-</div>
-
-<div class="stat-card">
-<h3>Pending Withdraws</h3>
-<p id="pendingWithdraws">0</p>
-</div>
-
-</div>
-
-<div class="section-card">
-
-<h2>📋 Create New Task</h2>
-
-<input
-id="taskName"
-placeholder="Task Name"
->
-
-<input
-id="taskLink"
-placeholder="Task Link"
->
-
-<input
-id="taskCoin"
-type="number"
-placeholder="Coin Reward"
->
-
-<input
-id="taskCode"
-placeholder="Verification Code (Optional)"
->
-
-<input
-id="taskTimer"
-type="number"
-placeholder="Task Timer (Seconds)"
->
-
-<input
-id="taskLimit"
-type="number"
-placeholder="Task Limit (0 = Unlimited)"
->
-
-<select id="taskType">
-
-<option value="daily">
-Daily Task
-</option>
-
-<option value="weekly">
-Weekly Task
-</option>
-
-<option value="permanent">
-Permanent Task
-</option>
-
-</select>
-
-<select id="taskStatus">
-
-<option value="published">
-Published
-</option>
-
-<option value="trending">
-Trending
-</option>
-
-</select>
-
-<button id="createTaskBtn">
-
-🚀 Create Task
-
-</button>
-
-</div>
-
-<div class="admin-menu">
-
-<a href="users.html">
-👥 Users
-</a>
-
-<a href="tasks.html">
-📋 Tasks
-</a>
-
-<a href="withdraws.html">
-💰 Withdraws
-</a>
-
-<a href="referrals.html">
-👥 Referrals
-</a>
-
-<a href="notifications.html">
-📢 Notices
-</a>
-
-<a href="security.html">
-🛡 Security
-</a>
-
-<a href="settings.html">
-⚙ Settings
-</a>
-
-</div>
-
-</div>
-
-<script
-type="module"
-src="../js/admin.js"
-></script>
-
+  <script type="module" src="../js/admin.js"></script>
 </body>
-
 </html>

@@ -69,7 +69,18 @@ async function loadProfile() {
   } else {
     facebookSection = `
       <div class="card">
-        <div class="card-header">📘 
+        <div class="card-header">📘 Facebook Profile</div>
+        <p style="word-break:break-all;color:var(--success);margin-bottom:10px;">
+          <a href="${data.facebookLink}" target="_blank" style="color:var(--success);text-decoration:none;">
+            ${data.facebookLink}
+          </a>
+        </p>
+        <button class="btn-secondary" id="changeFbBtn">Change Link</button>
+      </div>
+    `;
+  }
+
+  // Payment section
   const paymentSection = `
     <div class="card">
       <div class="card-header">💳 Payment Details</div>

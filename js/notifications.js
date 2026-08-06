@@ -16,14 +16,8 @@ async function loadNotifications() {
 
     const q =
       query(
-        collection(
-          db,
-          "notifications"
-        ),
-        orderBy(
-          "createdAt",
-          "desc"
-        )
+        collection(db, "notifications"),
+        orderBy("createdAt", "desc")
       );
 
     const snap =
@@ -31,47 +25,40 @@ async function loadNotifications() {
 
     let html = "";
 
-    let totalNotice = 0;
-
     snap.forEach(item => {
-
-      totalNotice++;
 
       const data =
         item.data();
 
-      let dateText =
-        "Unknown Date";
+      let date =
+        "Unknown";
 
       if (data.createdAt) {
-
-        dateText =
+        date =
           data.createdAt
           .toDate()
           .toLocaleString();
-
       }
 
       html += `
 
-      <div class="notice-card">
+      <div class="card">
 
         <h3>
-          📢 ${data.title || "Notice"}
+        📢 ${data.title}
         </h3>
 
         <p>
-          ${data.message || ""}
+        ${data.message}
         </p>
 
         <small>
-          🕒 ${dateText}
+        ${date}
         </small>
 
       </div>
 
       `;
-
     });
 
     document.getElementById(
@@ -80,44 +67,21 @@ async function loadNotifications() {
       html ||
       `
       <div class="card">
-
-      <h3>
-      📭 Empty
-      </h3>
-
-      <p>
-      No Notifications Available
-      </p>
-
+      No Notifications
       </div>
       `;
 
-    document.title =
-      `(${totalNotice}) Notifications`;
-
   }
 
-  catch (error) {
-
-    console.error(error);
+  catch {
 
     document.getElementById(
       "notificationsContainer"
     ).innerHTML =
       `
       <div class="card">
-
-      <h3>
-      ❌ Error
-      </h3>
-
-      <p>
       Failed To Load Notifications
-      </p>
-
       </div>
       `;
-
   }
-
 }

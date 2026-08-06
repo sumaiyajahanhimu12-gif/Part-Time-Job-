@@ -1,99 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0"
->
-
-<title>Settings</title>
-
-<link
-rel="stylesheet"
-href="../css/admin.css"
->
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#050B1F">
+  <title>Settings • Admin</title>
+  <link rel="stylesheet" href="../css/admin.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
-
 <body>
 
-<div class="admin-container">
+  <div id="app" class="loading-screen">
+    <div class="loader-content">
+      <div class="logo-glow">⚙</div>
+      <h1>Settings</h1>
+      <p class="loading-text">Loading...</p>
+    </div>
+  </div>
 
-<div class="admin-header">
-
-<h1>⚙ Settings</h1>
-
-<p>System Configuration</p>
-
-</div>
-
-<div class="section-card">
-
-<h2>💰 Withdraw Settings</h2>
-
-<select id="withdrawEnabled">
-
-<option value="true">
-Withdraw Enabled
-</option>
-
-<option value="false">
-Withdraw Disabled
-</option>
-
-</select>
-
-<input
-id="minWithdraw"
-type="number"
-placeholder="Minimum Withdraw Amount"
->
-
-</div>
-
-<div class="section-card">
-
-<h2>👥 Referral Settings</h2>
-
-<input
-id="referralPercent"
-type="number"
-placeholder="Referral Bonus %"
->
-
-</div>
-
-<div class="section-card">
-
-<h2>📋 Task Settings</h2>
-
-<input
-id="taskCooldown"
-type="number"
-placeholder="Task Cooldown (Hours)"
->
-
-</div>
-
-<button id="saveSettingsBtn">
-
-💾 Save Settings
-
-</button>
-
-</div>
-
-<script
-type="module"
-src="../js/admin-settings.js"
-></script>
-
+  <script type="module" src="../js/admin-settings.js"></script>
 </body>
-
 </html>

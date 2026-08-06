@@ -50,6 +50,8 @@ async function publishNotice() {
 
   }
 
+  publishBtn.disabled = true;
+
   await addDoc(
     collection(
       db,
@@ -58,13 +60,14 @@ async function publishNotice() {
     {
       title,
       message,
+      status: "published",
       createdAt:
         serverTimestamp()
     }
   );
 
   alert(
-    "Notice Published"
+    "Notice Published Successfully"
   );
 
   location.reload();
@@ -90,12 +93,17 @@ async function loadNotices() {
 
   let html = "";
 
+  let totalNotices = 0;
+
   snap.forEach(item => {
+
+    totalNotices++;
 
     const data =
       item.data();
 
-    let dateText = "";
+    let dateText =
+      "Unknown Date";
 
     if (data.createdAt) {
 
@@ -111,7 +119,7 @@ async function loadNotices() {
       <div class="section-card">
 
         <h3>
-          ${data.title}
+          📢 ${data.title}
         </h3>
 
         <p>
@@ -119,16 +127,19 @@ async function loadNotices() {
         </p>
 
         <small>
-          ${dateText}
+          🕒 ${dateText}
         </small>
 
         <br><br>
 
         <button
           onclick="deleteNotice('${item.id}')"
-          style="background:#dc2626;"
+          style="
+            background:#dc2626;
+            color:white;
+          "
         >
-          Delete
+          🗑 Delete
         </button>
 
       </div>
@@ -143,9 +154,20 @@ async function loadNotices() {
     html ||
     `
     <div class="section-card">
+
+      <h3>
+      📭 Empty
+      </h3>
+
+      <p>
       No Notices Found
+      </p>
+
     </div>
     `;
+
+  document.title =
+    `Notifications (${totalNotices})`;
 
 }
 
@@ -154,7 +176,7 @@ async function(id) {
 
   const ok =
     confirm(
-      "Delete Notice?"
+      "Delete This Notice?"
     );
 
   if (!ok)
